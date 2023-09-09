@@ -10,9 +10,12 @@ import (
 )
 
 
+type DistanceResults struct {
+  
+}
+
 // this is outputted to a different file where we actually calculate the results.
 type CoordinateDistance struct {
-  Coordinate Coordinate `json:"coordinate"`
   Distance float64`json:"distance"`
 }
 
@@ -36,7 +39,7 @@ func RadiansFromDegrees(degrees float64) float64  {
 }
 
 // earth radius 6372.8
-func calculateDistance(x0 float64, x1 float64, y0 float64, y1 float64, earthRadius float64) float64 {
+func calculateDistance(x0 float64, y0 float64, x1 float64, y1 float64, earthRadius float64) float64 {
   lat1 := y0
   lat2 := y1
 
@@ -60,21 +63,20 @@ func calculateDistance(x0 float64, x1 float64, y0 float64, y1 float64, earthRadi
 
 
 
-func calculateDistanceForHaversines(coordinates []Coordinate) []CoordinateDistance {
-  var distances []CoordinateDistance
+func calculateAverageDistanceForHaversines(coordinates []Coordinate) float64 {
+  countOfCoordinates := len(coordinates)
+  
+  var calculatedDistanceSum float64
 
   for _, coordinate := range coordinates {
-    calculatedDistance := calculateDistance(coordinate.X0, coordinate.X1, coordinate.Y0, coordinate.Y1, 6372.8)
 
-    coordinateWithDistance := CoordinateDistance{
-      Coordinate: coordinate,
-      Distance: calculatedDistance,
-    }
-
-    distances = append(distances, coordinateWithDistance)
+    calculatedDistance := calculateDistance(coordinate.X0, coordinate.Y0, coordinate.X1, coordinate.Y1, 6372.8)
+   
+    calculatedDistanceSum += calculatedDistance
   }
 
-  return distances
+
+  return calculatedDistanceSum / float64(countOfCoordinates)
 }
 
 func main() {
@@ -97,12 +99,13 @@ func main() {
     min := -90.0
     max := 90.0
 
+
     for i := 0; i < jsonNum; i++ {
         coordinates := Coordinate{
-                X0: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
-                X1: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
-                Y0: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
-                Y1: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
+            X0: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
+            X1: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
+            Y0: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
+            Y1: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
         }
 
         randomJsonData.Pairs = append(randomJsonData.Pairs, coordinates)
@@ -110,42 +113,31 @@ func main() {
 
     randomJsonDataEncoded, _ := json.Marshal(randomJsonData) 
 
-    jsonDataWithResults := calculateDistanceForHaversines(randomJsonData.Pairs)
-
-    randomJsonDataResultsEncoded, _ := json.Marshal(jsonDataWithResults) 
+    haversineAverage := calculateAverageDistanceForHaversines(randomJsonData.Pairs)
 
     if outputToFile {
       fileName := fmt.Sprintf("Output/JsonOutput_%d.json", jsonNum)
-      f1, err := os.Create(fileName)
+      writeToFile(fileName, string(randomJsonDataEncoded))
+
+      fmt.Printf("Average haversine amount: %f\n", haversineAverage)
+    } else {
+      fmt.Printf("Average haversine amount: %f\n", haversineAverage)
+      fmt.Printf("Final JSON data: %s\n", string(randomJsonDataEncoded))
+    }
+
+}
+
+func writeToFile(fileName string, contents string) {
+      f, err := os.Create(fileName)
       if err != nil {
               panic("Error creating json output file for some reason.")
       }
 
-      defer f1.Close()
+      defer f.Close()
 
-      _, err = f1.WriteString(string(randomJsonDataEncoded))
-
-      if err != nil {
-              panic("Error writing to file.")
-      }
-
-      fileNameDistance := fmt.Sprintf("Output/JsonOutput_%d_distance.json", jsonNum)
-      f2, err := os.Create(fileNameDistance)
-      if err != nil {
-              panic("Error creating distance file for some reason.")
-      }
-
-      defer f2.Close()
-
-      _, err = f2.WriteString(string(randomJsonDataResultsEncoded))
+      _, err = f.WriteString(contents)
 
       if err != nil {
-              panic("Error writing to file.")
+          panic("Error writing to file.")
       }
-
-    } else {
-      fmt.Printf("Final JSON data: %s\n", string(randomJsonDataEncoded))
-      fmt.Printf("Final JSON data results: %s\n", string(randomJsonDataResultsEncoded))
-    }
-
 }

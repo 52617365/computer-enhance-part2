@@ -8,9 +8,9 @@ BUILD_DIR = build
 .PHONY: all build clean
 
 # Build the project and place the binary in the build directory
-all: build
+all: build-haversine-gen
 
-build:
+build-haversine-gen:
 	@mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME)
 
