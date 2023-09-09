@@ -9,10 +9,10 @@ import (
 )
 
 type Coordinate struct { 
-        X0 int `json:"x0"`
-        X1 int `json:"x1"`
-        Y0 int `json:"y0"`
-        Y1 int `json:"y1"`
+        X0 float64 `json:"x0"`
+        X1 float64 `json:"x1"`
+        Y0 float64 `json:"y0"`
+        Y1 float64 `json:"y1"`
 }
 
 type JsonPairs struct {
@@ -38,16 +38,17 @@ func main() {
 
     var randomJsonData JsonPairs
 
+    min := -90.0
+    max := 90.0
 
     for i := 0; i < jsonNum; i++ {
         coordinates := Coordinate{
-                X0: rand.Intn(181) - 90, // Random number between 0 and 180, then shift to range -90 to +90
-                X1: rand.Intn(181) - 90, // Random number between 0 and 180, then shift to range -90 to +90
-                Y0: rand.Intn(181) - 90, // Random number between 0 and 180, then shift to range -90 to +90
-                Y1: rand.Intn(181) - 90, // Random number between 0 and 180, then shift to range -90 to +90
+                X0: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
+                X1: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
+                Y0: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
+                Y1: min + rand.Float64() * (max - min), // Random number between 0 and 180, then shift to range -90 to +90
         }
 
-        // fmt.Printf("coordinate: x0: %s, x1: %s, y0: %s, y1: %s\n", coordinates.x0, coordinates.x1, coordinates.y0, coordinates.y1)
         randomJsonData.Pairs = append(randomJsonData.Pairs, coordinates)
     }
 
