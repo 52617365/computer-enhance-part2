@@ -3,7 +3,7 @@ package main
 import (
   "flag"
   "fmt"
-  "io/ioutil"
+  "os"
 )
 
 type Arguments struct {
@@ -27,7 +27,7 @@ func parseArguments() Arguments {
 }
 
 func readFileToString(filePath string) string {
-  data, err := ioutil.ReadFile(filePath)
+  data, err := os.ReadFile(filePath)
 
   if err != nil {
     panic("Error reading the JSON file contents")
