@@ -1,10 +1,5 @@
 package main
 
-type Token struct {
-  tokenType TokenType
-  contents string
-}
-
 
 type TokenType int64
 

@@ -6,6 +6,12 @@ import (
   "unicode"
 )
 
+type Token struct {
+  pos Position
+  tokenType TokenType
+  tokenContents string
+}
+
 type Position struct {
   line int
   column int
@@ -38,6 +44,109 @@ func (l *Lexer) backup() {
 	l.pos.column--
 }
 
+
+func (l *Lexer) GetTokensFromLexer() []Token {
+  var tokens []Token
+  for {
+    token := l.Lex()
+		if token.tokenType == EOF {
+			break
+		}
+
+    tokens = append(tokens, token)
+	}
+  return tokens
+}
+
+func (l *Lexer) Lex() Token {
+	// keep looping until we return a token
+	for {
+		r, _, err := l.reader.ReadRune()
+		if err != nil {
+			if err == io.EOF {
+				return Token{
+          pos: l.pos, 
+          tokenType: EOF, 
+          tokenContents: "",
+        }
+			}
+
+			// at this point there  isn't much we can do, and the compiler
+			// should just return the raw error to the user
+			panic(err)
+		}
+    l.pos.column++
+
+    switch r {
+        case '\n':
+          l.resetPosition()
+        case '{':
+            return Token{
+              pos: l.pos, 
+              tokenType: CURLYOPEN, 
+              tokenContents: "{",
+            }
+        case '}':
+            return Token{
+              pos: l.pos, 
+              tokenType: CURLYCLOSE, 
+              tokenContents: "}",
+            }
+        case '[':
+            return Token{
+              pos: l.pos, 
+              tokenType: SQUAREOPEN, 
+              tokenContents: "[",
+            }
+        case ']':
+            return Token{
+              pos: l.pos, 
+              tokenType: SQUARECLOSE, 
+              tokenContents: "]",
+            }
+        case ':':
+            return Token{
+              pos: l.pos, 
+              tokenType: COLON, 
+              tokenContents: ":",
+            }
+        case ',':
+            return Token{
+              pos: l.pos, 
+              tokenType: COMMA, 
+              tokenContents: ",",
+            }
+        case '"':
+            return Token{
+              pos: l.pos, 
+              tokenType: QUOTATION, 
+              tokenContents: "\"",
+            }
+        default:
+            if unicode.IsSpace(r) {
+                continue // nothing to do here, just move on
+            } else if unicode.IsDigit(r) || unicode.IsLetter(r) || isIdentSymbol(r) {
+                // backup and let lexIdent rescan the beginning of the ident
+                startPos := l.pos
+                l.backup()
+                lit := l.lexIdent() // TODO: make lexIdent and handle numbers inside of it because we don't want to separate them.
+
+                return Token{
+                  pos: startPos, 
+                  tokenType: IDENT, 
+                  tokenContents: lit,
+                }
+            } else {
+                return Token{
+                  pos: l.pos, 
+                  tokenType: ILLEGAL, 
+                  tokenContents: string(r),
+                }
+            }
+        }
+    }
+}
+
 // lexIdent scans the input until the end of an identifier and then returns the
 // literal.
 func (l *Lexer) lexIdent() string {
@@ -60,54 +169,6 @@ func (l *Lexer) lexIdent() string {
 			return lit
 		}
 	}
-}
-
-func (l *Lexer) Lex() (Position, TokenType, string) {
-	// keep looping until we return a token
-	for {
-		r, _, err := l.reader.ReadRune()
-		if err != nil {
-			if err == io.EOF {
-				return l.pos, EOF, ""
-			}
-
-			// at this point there  isn't much we can do, and the compiler
-			// should just return the raw error to the user
-			panic(err)
-		}
-    l.pos.column++
-
-    switch r {
-        case '\n':
-          l.resetPosition()
-        case '{':
-            return l.pos, CURLYOPEN, "{"
-        case '}':
-            return l.pos, CURLYCLOSE, "}"
-        case '[':
-            return l.pos, SQUAREOPEN, "["
-        case ']':
-            return l.pos, SQUARECLOSE, "]"
-        case ':':
-            return l.pos, COLON, ":"
-        case ',':
-            return l.pos, COMMA, ","
-        case '"':
-            return l.pos, QUOTATION, "\""
-        default:
-            if unicode.IsSpace(r) {
-                continue // nothing to do here, just move on
-            } else if unicode.IsDigit(r) || unicode.IsLetter(r) || isIdentSymbol(r) {
-                // backup and let lexIdent rescan the beginning of the ident
-                startPos := l.pos
-                l.backup()
-                lit := l.lexIdent() // TODO: make lexIdent and handle numbers inside of it because we don't want to separate them.
-                return startPos, IDENT, lit
-            } else {
-                return l.pos, ILLEGAL, string(r)
-            }
-        }
-    }
 }
 
 func isIdentSymbol(r rune) bool {

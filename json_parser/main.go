@@ -58,12 +58,9 @@ func main() {
 
   lexer := NewLexer(file)
 
-  for {
-		pos, tok, lit := lexer.Lex()
-		if tok == EOF {
-			break
-		}
+  tokens := lexer.GetTokensFromLexer()
 
-		fmt.Printf("%d:%d\t%s\t%s\n", pos.line, pos.column, tok, lit)
-	}
+  for _, token := range tokens {
+		fmt.Printf("%d:%d\t%s\t%s\n", token.pos.line, token.pos.column, token.tokenType, token.tokenContents)
+  }
 }
