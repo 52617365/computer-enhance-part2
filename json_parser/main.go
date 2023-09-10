@@ -120,7 +120,7 @@ func (l *Lexer) lexIdent() string {
 		}
 			
     l.pos.column++
-		if unicode.IsLetter(r) || unicode.IsNumber(r) {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) || isIdentSymbol(r) {
 			lit = lit + string(r)
 		} else {
 			// scanned something not in the identifier
@@ -165,7 +165,7 @@ func (l *Lexer) Lex() (Position, TokenType, string) {
         default:
             if unicode.IsSpace(r) {
                 continue // nothing to do here, just move on
-            } else if unicode.IsDigit(r) || unicode.IsLetter(r) {
+            } else if unicode.IsDigit(r) || unicode.IsLetter(r) || isIdentSymbol(r) {
                 // backup and let lexIdent rescan the beginning of the ident
                 startPos := l.pos
                 l.backup()
@@ -176,4 +176,12 @@ func (l *Lexer) Lex() (Position, TokenType, string) {
             }
         }
     }
+}
+
+func isIdentSymbol(r rune) bool {
+  if r == '.' || r == '-' {
+    return true
+  } else {
+    return false
+  }
 }
