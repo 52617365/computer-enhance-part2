@@ -15,6 +15,10 @@ const (
   SQUAREOPEN
   SQUARECLOSE
   COMMA
+  QUOTATION
+  EOF
+  IDENT
+  ILLEGAL
 )
 
 var tokens = []string {
@@ -24,9 +28,15 @@ var tokens = []string {
   SQUAREOPEN: "[",
   SQUARECLOSE: "]",
   COMMA: ",",
+  QUOTATION: "\"",
+  IDENT: "IDENT",
+  ILLEGAL: "ILLEGAL",
 }
 
 func (t TokenType) String() string {
+  if t == EOF {
+    panic("Can't lookup string of EOF")
+  }
   return tokens[t]
 }
 
