@@ -6,11 +6,6 @@ import (
   "unicode"
 )
 
-type Token struct {
-  pos Position
-  tokenType TokenType
-  tokenContents string
-}
 
 type Position struct {
   line int
@@ -27,8 +22,6 @@ func (l *Lexer) resetPosition() {
 	l.pos.column = 0
 }
 
-
-
 func NewLexer(reader io.Reader) *Lexer {
   return &Lexer{
     pos: Position{line: 1, column: 0},
@@ -43,7 +36,6 @@ func (l *Lexer) backup() {
 	
 	l.pos.column--
 }
-
 
 func (l *Lexer) GetTokensFromLexer() []Token {
   var tokens []Token

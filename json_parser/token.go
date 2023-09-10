@@ -1,6 +1,12 @@
 package main
 
 
+type Token struct {
+  pos Position
+  tokenType TokenType
+  tokenContents string
+}
+
 type TokenType int64
 
 const (
