@@ -120,7 +120,29 @@ func (l *Lexer) Lex() Token {
                 // backup and let lexIdent rescan the beginning of the ident
                 startPos := l.pos
                 l.backup()
-                lit := l.lexIdent() // TODO: make lexIdent and handle numbers inside of it because we don't want to separate them.
+                lit := l.lexIdent()
+
+                isNumber := true
+
+                for _, r := range lit {
+                  if unicode.IsLetter(r) {
+                    isNumber = false
+                  }
+                }
+
+                if isNumber {
+                  return Token{
+                    pos: startPos, 
+                    tokenType: NUMBER, 
+                    tokenContents: lit,
+                  }
+                } else {
+                  return Token{
+                    pos: startPos, 
+                    tokenType: IDENT, 
+                    tokenContents: lit,
+                  }
+                }
 
                 return Token{
                   pos: startPos, 

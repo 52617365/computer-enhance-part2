@@ -19,6 +19,7 @@ const (
   QUOTATION
   EOF
   IDENT
+  NUMBER
   ILLEGAL
 )
 
@@ -31,6 +32,7 @@ var tokens = []string {
   COMMA: "COMMA",
   QUOTATION: "QUOTATION",
   IDENT: "IDENT",
+  NUMBER: "NUMBER",
   ILLEGAL: "ILLEGAL",
 }
 

@@ -60,7 +60,11 @@ func main() {
 
   tokens := lexer.GetTokensFromLexer()
 
-  for _, token := range tokens {
-		fmt.Printf("%d:%d\t%s\t%s\n", token.pos.line, token.pos.column, token.tokenType, token.tokenContents)
-  }
+  // parser := GetParser(tokens)
+
+  for i := 0; i < len(tokens); i++ {
+    // syntax := parser.parse()
+		fmt.Printf("%d:%d\t%s\t%s\n", tokens[i].pos.line, tokens[i].pos.column, tokens[i].tokenType, tokens[i].tokenContents)
+		// fmt.Printf("%+v\n", syntax)
+	}
 }

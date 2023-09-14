@@ -3,21 +3,21 @@ package main
 // NOTE: We probably don't need to build an AST to parse JSON but I'll do it anyway just in case and to learn.
 
 type ObjectNode struct {
-	Pairs map[string]Node
-  startPos int
-  endPos int
+	Objects  map[string]Node
+	startPos int
+	endPos   int
 }
 
 type ArrayNode struct {
 	Elements []Node
-  startPos int
-  endPos int
+	startPos int
+	endPos   int
 }
 
 type StringNode struct {
-  Value string
-  startPos int
-  endPos int
+	Value    string
+	startPos int
+	endPos   int
 }
 
 type Parser struct {
@@ -25,132 +25,152 @@ type Parser struct {
 	pos    int
 }
 
-
 // Node interface to represent AST nodes
 type Node interface{}
 
+func GetParser(tokens []Token) *Parser {
+	return &Parser{
+		tokens: tokens,
+		pos:    0,
+	}
+}
 func (p *Parser) parseString() StringNode {
-  var parsedString string
+	var parsedString string
 
-  p.pos++ // Skipping the " character.
+	p.pos++ // Skipping the " character.
 
-  start := p.pos
+	start := p.pos
 
-  for p.tokens[p.pos].tokenType != QUOTATION {
-    parsedString = parsedString + p.tokens[p.pos].tokenContents
+	for p.tokens[p.pos].tokenType != QUOTATION { // FIXME: p.pos out of range here.
+		parsedString = parsedString + p.tokens[p.pos].tokenContents
 
-    p.pos++
-  }
+		p.pos++
+	}
 
-  end := p.pos // Capturing the end of the string
+	if p.tokens[p.pos].tokenType != QUOTATION {
+		panic("Expected the end of a string (\") here.")
+	}
 
-  p.pos++ // Skipping the closing " character.
+	end := p.pos // Capturing the end of the string
 
-  return StringNode{
-    Value: parsedString,
-    startPos: start,
-    endPos: end,
-  }
+	p.pos++ // Skipping the closing " character.
+
+	return StringNode{
+		Value:    parsedString,
+		startPos: start,
+		endPos:   end,
+	}
 
 }
 
 func (p *Parser) parseArray() ArrayNode {
-  if p.tokens[p.pos].tokenType != SQUAREOPEN {
-    panic("Expected the current token type to be SQUAREOPEN.")
-  }
+	if p.tokens[p.pos].tokenType != SQUAREOPEN {
+		panic("Expected the current token type to be SQUAREOPEN.")
+	}
 
-  var elements []Node
+	var elements []Node
 
-  p.pos++ // Skipping the [ character.
+	p.pos++ // Skipping the [ character.
 
-  start := p.pos
+	start := p.pos
 
-  for p.tokens[p.pos].tokenType != SQUARECLOSE {
-    
-    node := p.parse()
+	for p.tokens[p.pos].tokenType != SQUARECLOSE {
 
-    elements = append(elements, node)
+		node := p.parse()
 
-    p.pos++
-  }
+		elements = append(elements, node)
 
-  end := p.pos
+		p.pos++
+	}
 
-  if p.tokens[p.pos].tokenType != SQUARECLOSE {
-    panic("Expected the current token type to be SQUARECLOSE.")
-  }
+	if p.tokens[p.pos].tokenType != SQUARECLOSE {
+		panic("Expected the current token type to be SQUARECLOSE.")
+	}
 
-  p.pos++ // Skipping the ] character at the end of the array.
+	end := p.pos
 
-  return ArrayNode{
-    Elements: elements,
-    startPos: start,
-    endPos: end,
-  }
+	return ArrayNode{
+		Elements: elements,
+		startPos: start,
+		endPos:   end,
+	}
 }
 
-func (p *Parser) parseObject() StringNode {
-  if p.tokens[p.pos].tokenType != CURLYOPEN {
-    panic("Expected the current token type to be CURLYOPEN")
-  }
+func (p *Parser) parseObject() ObjectNode {
+	if p.tokens[p.pos].tokenType != CURLYOPEN {
+		panic("Expected the current token type to be CURLYOPEN")
+	}
+	pairs := make(map[string]Node)
 
-  var object map[string]Node
+	p.pos++ // Skipping the { character.
 
-  p.pos++ // Skipping the { character.
+	start := p.pos
 
-  start := p.pos
+	for p.tokens[p.pos].tokenType != CURLYCLOSE {
 
-  for p.tokens[p.pos].tokenType != SQUARECLOSE {
-    node := p.parse()
-    // TODO: We have to parse the key and value in here to produce the correct object.
-    parsedString = parsedString + p.tokens[p.pos].tokenContents
+		key := p.parse()
+		value := p.parse()
 
-    p.pos++
-  }
+		if p.tokens[p.pos].tokenType == COMMA {
+			key := p.parse()
+			keyCast, found := key.(StringNode)
 
-  end := p.pos
+			if !found {
+				panic("Expected a string here.")
+			}
 
-  if p.tokens[p.pos].tokenType != CURLYCLOSE {
-    panic("Expected the current token type to be CURLYCLOSE")
-  }
+			node := p.parse()
 
-  p.pos++ // Skipping the } character at the end of the object.
+			pairs[keyCast.Value] = node
+		}
 
-  return ObjectNode{
-    Value: object,
-    startPos: start,
-    endPos: end,
-  }
+		keyCast, found := key.(StringNode)
+		if !found {
+			panic("Expected a string here.")
+		}
+		pairs[keyCast.Value] = value
+
+		p.pos++
+	}
+
+	end := p.pos
+
+	if p.tokens[p.pos].tokenType != CURLYCLOSE {
+		panic("Expected the current token type to be CURLYCLOSE")
+	}
+
+	return ObjectNode{
+		Objects:  pairs,
+		startPos: start,
+		endPos:   end,
+	}
 }
-// TODO: define all the nodes. E.g. string, number, array, etc.
+
 func (p *Parser) parse() Node {
 	token := p.tokens[p.pos]
-	p.pos++
 
 	switch token.tokenType {
 	case CURLYOPEN:
 		return p.parseObject()
+	case CURLYCLOSE:
+		p.pos++
+		return p.parse()
 	case SQUAREOPEN:
 		return p.parseArray()
-  case QUOTATION: // FIXME: this one right here will not work because the value of the token is '"', 
-                  // instead we will have to make a function that loops until it finds another " and captures that string instead.
-    return p.parseString()
+	case SQUARECLOSE:
+		p.pos++
+		return p.parse()
+	case QUOTATION:
+		return p.parseString()
+	case IDENT:
+		return p.parseString()
+	case COLON:
+		p.pos++ // Skipping the colon because we don't actually care about it.
+		return p.parse()
+	case COMMA:
+		p.pos++ // Skipping the colon because we don't actually care about it.
+		return p.parse()
 	default:
 		return nil
 	}
 }
-// type Node struct {
-//     data Token
-//     prev *Node
-//     succ *Node
-// }
-//
-// func buildSyntaxTreeFromTokens(tokens []Token) {
-//
-//   nodes := []Node
-//
-//
-//   for _, token := range tokens {
-//   }
-//
-// }
