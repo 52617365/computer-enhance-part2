@@ -1,70 +1,71 @@
 package main
 
 import (
-  "os"
-  "fmt"
-  "flag"
+	"flag"
+	"fmt"
+	"os"
 )
 
 type Arguments struct {
-  filePath string
+	filePath string
 }
 
 func parseArguments() Arguments {
-  var filePath string
+	var filePath string
 
-  flag.StringVar(&filePath, "filePath", "", "Path to the parsable JSON file.")
-  flag.Parse()
+	flag.StringVar(&filePath, "filePath", "", "Path to the parsable JSON file.")
+	flag.Parse()
 
+	if filePath == "" {
+		panic("file path is not provided")
+	}
 
-  if filePath == "" {
-    panic("file path is not provided")
-  }
-
-  return Arguments {
-    filePath: filePath,
-  }
+	return Arguments{
+		filePath: filePath,
+	}
 }
 
 func readFileToString(filePath string) string {
-  data, err := os.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 
-  if err != nil {
-    panic("Error reading the JSON file contents")
-  }
+	if err != nil {
+		panic("Error reading the JSON file contents")
+	}
 
-  dataString := string(data)
+	dataString := string(data)
 
-  return dataString
+	return dataString
 }
 
-
 func main() {
-  arguments := parseArguments()
+	arguments := parseArguments()
 
-  data := readFileToString(arguments.filePath)
+	data := readFileToString(arguments.filePath)
 
-  fmt.Printf("-------------\n")
-  fmt.Printf("File path: %s\n", arguments.filePath)
-  fmt.Printf("Data:\n%s\n", data)
-  fmt.Printf("-------------\n")
+	fmt.Printf("-------------\n")
+	fmt.Printf("File path: %s\n", arguments.filePath)
+	fmt.Printf("Data:\n%s\n", data)
+	fmt.Printf("-------------\n")
 
+	file, err := os.Open(arguments.filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
 
-  file, err := os.Open(arguments.filePath)
-  if err != nil {
-    panic(err)
-  }
-  defer file.Close()
+	lexer := NewLexer(file)
 
-  lexer := NewLexer(file)
+	tokens := lexer.GetTokensFromLexer()
 
-  tokens := lexer.GetTokensFromLexer()
+	parser := GetParser(tokens)
 
-  // parser := GetParser(tokens)
+	for {
+		syntax := parser.parse()
+		if _, ok := syntax.(EndOfFile); ok {
+			break
+		}
 
-  for i := 0; i < len(tokens); i++ {
-    // syntax := parser.parse()
-		fmt.Printf("%d:%d\t%s\t%s\n", tokens[i].pos.line, tokens[i].pos.column, tokens[i].tokenType, tokens[i].tokenContents)
-		// fmt.Printf("%+v\n", syntax)
+		// fmt.Printf("%d:%d\t%s\t%s\n", tokens[i].pos.line, tokens[i].pos.column, tokens[i].tokenType, tokens[i].tokenContents)
+		fmt.Printf("%+v\n", syntax)
 	}
 }

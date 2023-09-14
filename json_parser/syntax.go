@@ -1,5 +1,10 @@
 package main
 
+import (
+	"strconv"
+	"strings"
+)
+
 // NOTE: We probably don't need to build an AST to parse JSON but I'll do it anyway just in case and to learn.
 
 type ObjectNode struct {
@@ -20,9 +25,24 @@ type StringNode struct {
 	endPos   int
 }
 
+type NumberNode struct {
+	Value    float64
+	startPos int
+	endPos   int
+}
+
 type Parser struct {
 	tokens []Token
 	pos    int
+}
+
+type EndOfFile struct {
+}
+
+func (p *Parser) IncrementPos() {
+	if len(p.tokens) > p.pos {
+		p.pos++
+	}
 }
 
 // Node interface to represent AST nodes
@@ -37,14 +57,15 @@ func GetParser(tokens []Token) *Parser {
 func (p *Parser) parseString() StringNode {
 	var parsedString string
 
-	p.pos++ // Skipping the " character.
+	p.IncrementPos() // Skipping the " character.
 
 	start := p.pos
 
 	for p.tokens[p.pos].tokenType != QUOTATION { // FIXME: p.pos out of range here.
 		parsedString = parsedString + p.tokens[p.pos].tokenContents
 
-		p.pos++
+		p.IncrementPos()
+		// p.pos++
 	}
 
 	if p.tokens[p.pos].tokenType != QUOTATION {
@@ -53,7 +74,7 @@ func (p *Parser) parseString() StringNode {
 
 	end := p.pos // Capturing the end of the string
 
-	p.pos++ // Skipping the closing " character.
+	p.IncrementPos() // Skipping the closing " character.
 
 	return StringNode{
 		Value:    parsedString,
@@ -70,7 +91,8 @@ func (p *Parser) parseArray() ArrayNode {
 
 	var elements []Node
 
-	p.pos++ // Skipping the [ character.
+	p.IncrementPos() // Skipping the [ character.
+	// p.pos++ // Skipping the [ character.
 
 	start := p.pos
 
@@ -80,7 +102,8 @@ func (p *Parser) parseArray() ArrayNode {
 
 		elements = append(elements, node)
 
-		p.pos++
+		p.IncrementPos()
+		// p.pos++
 	}
 
 	if p.tokens[p.pos].tokenType != SQUARECLOSE {
@@ -96,13 +119,41 @@ func (p *Parser) parseArray() ArrayNode {
 	}
 }
 
+func (p *Parser) parseNumber() NumberNode {
+	var parsedNumber string
+
+	start := p.pos
+
+	for p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE {
+		parsedNumber = p.tokens[p.pos].tokenContents
+		// parsedNumber = parsedNumber + p.tokens[p.pos].tokenContents
+
+		p.IncrementPos()
+	}
+
+	if p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE {
+		panic("Expected the end of a number (, or }) here.")
+	}
+
+	end := p.pos // Capturing the end of the number
+
+	castedFloat, _ := strconv.ParseFloat(strings.TrimSpace(parsedNumber), 64)
+
+	return NumberNode{
+		Value:    castedFloat,
+		startPos: start,
+		endPos:   end,
+	}
+
+}
+
 func (p *Parser) parseObject() ObjectNode {
 	if p.tokens[p.pos].tokenType != CURLYOPEN {
 		panic("Expected the current token type to be CURLYOPEN")
 	}
 	pairs := make(map[string]Node)
 
-	p.pos++ // Skipping the { character.
+	p.IncrementPos() // Skipping the { character.
 
 	start := p.pos
 
@@ -130,7 +181,7 @@ func (p *Parser) parseObject() ObjectNode {
 		}
 		pairs[keyCast.Value] = value
 
-		p.pos++
+		p.IncrementPos()
 	}
 
 	end := p.pos
@@ -147,28 +198,33 @@ func (p *Parser) parseObject() ObjectNode {
 }
 
 func (p *Parser) parse() Node {
+	if p.pos >= len(p.tokens) {
+		return EndOfFile{}
+	}
 	token := p.tokens[p.pos]
 
 	switch token.tokenType {
 	case CURLYOPEN:
 		return p.parseObject()
 	case CURLYCLOSE:
-		p.pos++
+		p.IncrementPos()
 		return p.parse()
 	case SQUAREOPEN:
 		return p.parseArray()
 	case SQUARECLOSE:
-		p.pos++
+		p.IncrementPos()
 		return p.parse()
 	case QUOTATION:
 		return p.parseString()
 	case IDENT:
 		return p.parseString()
+	case NUMBER:
+		return p.parseNumber()
 	case COLON:
-		p.pos++ // Skipping the colon because we don't actually care about it.
+		p.IncrementPos() // Skipping the colon because we don't actually care about it.
 		return p.parse()
 	case COMMA:
-		p.pos++ // Skipping the colon because we don't actually care about it.
+		p.IncrementPos() // Skipping the comma because we don't actually care about it in this context.
 		return p.parse()
 	default:
 		return nil
