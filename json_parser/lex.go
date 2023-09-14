@@ -6,7 +6,6 @@ import (
   "unicode"
 )
 
-
 type Position struct {
   line int
   column int
