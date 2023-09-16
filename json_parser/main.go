@@ -59,23 +59,21 @@ func main() {
 
 	parser := GetParser(tokens)
 
-  // FIXME: right now we're expecting the parse function to be called multiple times but it's only called once since it's recursive.
-  // POTENTIAL FIX: Maybe we should add an AST member into the Parser struct that gets updated?
-  // UPDATE: Added syntax member that is []Node
-  parser.parse()
+	// FIXME: Why are we currently printing the results two times?
+	parser.parse()
 
-  for _, node := range parser.syntax {
-    if eof, ok := node.(EndOfFile); ok {
-      fmt.Printf("File end at position %d\n", eof.endPos)
-      break
-    } else if contents, ok := node.(ObjectNode); ok {
-      fmt.Printf("start: %d, end: %d, objects: %s\n", contents.startPos, contents.endPos, contents.Objects)
-    } else if contents, ok := node.(ArrayNode); ok {
-      fmt.Printf("start: %d, end: %d, array: %s\n", contents.startPos, contents.endPos, contents.Elements)
-    } else if contents, ok := node.(StringNode); ok {
-      fmt.Printf("start: %d, end: %d, string: %s\n", contents.startPos, contents.endPos, contents.Value)
-    } else if contents, ok := node.(NumberNode); ok {
-      fmt.Printf("start: %d, end: %d, number: %s\n", contents.startPos, contents.endPos, contents.Value)
-    }
-  }
+	for _, node := range parser.syntax {
+		if eof, ok := node.(EndOfFile); ok {
+			fmt.Printf("File end at position %d\n", eof.endPos)
+			break
+		} else if contents, ok := node.(ObjectNode); ok {
+			fmt.Printf("Object - start: %d, end: %d, objects: %s\n", contents.startPos, contents.endPos, contents.Objects)
+		} else if contents, ok := node.(ArrayNode); ok {
+			fmt.Printf("Array - start: %d, end: %d, array: %s\n", contents.startPos, contents.endPos, contents.Elements)
+		} else if contents, ok := node.(StringNode); ok {
+			fmt.Printf("String - start: %d, end: %d, string: %s\n", contents.startPos, contents.endPos, contents.Value)
+		} else if contents, ok := node.(NumberNode); ok {
+			fmt.Printf("Number - start: %d, end: %d, number: %.15f\n", contents.startPos, contents.endPos, contents.Value)
+		}
+	}
 }

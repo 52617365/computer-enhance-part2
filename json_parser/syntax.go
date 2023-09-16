@@ -33,7 +33,7 @@ type NumberNode struct {
 
 type Parser struct {
 	tokens []Token
-  syntax []Node
+	syntax []Node
 	pos    int
 }
 
@@ -132,15 +132,14 @@ func (p *Parser) parseNumber() NumberNode {
 
 	start := p.pos
 
-	for p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE {
+	for p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
 		parsedNumber = p.tokens[p.pos].tokenContents
-		// parsedNumber = parsedNumber + p.tokens[p.pos].tokenContents
 
 		p.IncrementPos()
 	}
 
-	if p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE {
-		panic("Expected the end of a number (, or }) here.")
+	if p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
+		panic("Expected the end of a number (, or } or ]) here.")
 	}
 
 	end := p.pos // Capturing the end of the number
@@ -229,53 +228,47 @@ func (p *Parser) parseObject() Node {
 func (p *Parser) parse() Node {
 	if p.pos >= len(p.tokens) {
 		p.syntax = append(p.syntax, EndOfFile{endPos: p.pos})
-    return EndOfFile{endPos: p.pos}
+		return EndOfFile{endPos: p.pos}
 	}
 
+	// TODO: this appending and returning thing is causing hella issues for us.
+	//  It's causing the items to be appended twice..
 	token := p.tokens[p.pos]
 
 	switch token.tokenType {
 	case CURLYOPEN:
     parsedObject := p.parseObject()
-		p.syntax = append(p.syntax, parsedObject)
-    return parsedObject
+    p.syntax = append(p.syntax, parsedObject)
+		return parsedObject
 	case CURLYCLOSE:
 		p.IncrementPos()
-    parsedThing := p.parse()
-		p.syntax = append(p.syntax, parsedThing)
-    return parsedThing
+		return p.parse()
 	case SQUAREOPEN:
     parsedArray := p.parseArray()
-		p.syntax = append(p.syntax, parsedArray)
-    return parsedArray
+    p.syntax = append(p.syntax, parsedArray)
+		return parsedArray
 	case SQUARECLOSE:
 		p.IncrementPos()
-    parsedThing := p.parse()
-		p.syntax = append(p.syntax, parsedThing)
-    return parsedThing
+		return p.parse()
 	case QUOTATION:
     parsedString := p.parseString()
-		p.syntax = append(p.syntax, parsedString)
+    p.syntax = append(p.syntax, parsedString)
     return parsedString
 	case IDENT:
     parsedString := p.parseString()
-		p.syntax = append(p.syntax, parsedString)
+    p.syntax = append(p.syntax, parsedString)
     return parsedString
 	case NUMBER:
     parsedNumber := p.parseNumber()
-		p.syntax = append(p.syntax, parsedNumber)
+    p.syntax = append(p.syntax, parsedNumber)
     return parsedNumber
 	case COLON:
 		p.IncrementPos() // Skipping the colon because we don't actually care about it.
-    parsedThing := p.parse()
-		p.syntax = append(p.syntax, parsedThing)
-    return parsedThing
+		return p.parse()
 	case COMMA:
 		p.IncrementPos() // Skipping the comma because we don't actually care about it in this context.
-    parsedThing := p.parse()
-		p.syntax = append(p.syntax, parsedThing)
-    return parsedThing
+		return p.parse()
 	default:
-    panic("Why did we get here?")
+		panic("Why did we get here?")
 	}
 }
