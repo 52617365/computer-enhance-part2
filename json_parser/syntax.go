@@ -33,10 +33,12 @@ type NumberNode struct {
 
 type Parser struct {
 	tokens []Token
+  syntax []Node
 	pos    int
 }
 
 type EndOfFile struct {
+	endPos int
 }
 
 func (p *Parser) IncrementPos() {
@@ -54,6 +56,7 @@ func GetParser(tokens []Token) *Parser {
 		pos:    0,
 	}
 }
+
 func (p *Parser) parseString() StringNode {
 	var parsedString string
 
@@ -84,7 +87,7 @@ func (p *Parser) parseString() StringNode {
 
 }
 
-func (p *Parser) parseArray() ArrayNode {
+func (p *Parser) parseArray() Node {
 	if p.tokens[p.pos].tokenType != SQUAREOPEN {
 		panic("Expected the current token type to be SQUAREOPEN.")
 	}
@@ -99,6 +102,11 @@ func (p *Parser) parseArray() ArrayNode {
 	for p.tokens[p.pos].tokenType != SQUARECLOSE {
 
 		node := p.parse()
+
+		// return early if we hit end of file with parse
+		if _, ok := node.(EndOfFile); ok {
+			return EndOfFile{endPos: p.pos}
+		}
 
 		elements = append(elements, node)
 
@@ -147,7 +155,7 @@ func (p *Parser) parseNumber() NumberNode {
 
 }
 
-func (p *Parser) parseObject() ObjectNode {
+func (p *Parser) parseObject() Node {
 	if p.tokens[p.pos].tokenType != CURLYOPEN {
 		panic("Expected the current token type to be CURLYOPEN")
 	}
@@ -162,8 +170,24 @@ func (p *Parser) parseObject() ObjectNode {
 		key := p.parse()
 		value := p.parse()
 
+		// return early if we hit end of file with key parse.
+		if _, ok := key.(EndOfFile); ok {
+			return EndOfFile{endPos: p.pos}
+		}
+
+		// return early if we hit end of file with value parse.
+		if _, ok := value.(EndOfFile); ok {
+			return EndOfFile{endPos: p.pos}
+		}
+
 		if p.tokens[p.pos].tokenType == COMMA {
-			key := p.parse()
+			key = p.parse()
+
+			// return early if we hit end of file with key parse.
+			if _, ok := key.(EndOfFile); ok {
+				return EndOfFile{endPos: p.pos}
+			}
+
 			keyCast, found := key.(StringNode)
 
 			if !found {
@@ -171,6 +195,11 @@ func (p *Parser) parseObject() ObjectNode {
 			}
 
 			node := p.parse()
+
+			// return early if we hit end of file
+			if _, ok := node.(EndOfFile); ok {
+				return EndOfFile{endPos: p.pos}
+			}
 
 			pairs[keyCast.Value] = node
 		}
@@ -199,34 +228,54 @@ func (p *Parser) parseObject() ObjectNode {
 
 func (p *Parser) parse() Node {
 	if p.pos >= len(p.tokens) {
-		return EndOfFile{}
+		p.syntax = append(p.syntax, EndOfFile{endPos: p.pos})
+    return EndOfFile{endPos: p.pos}
 	}
+
 	token := p.tokens[p.pos]
 
 	switch token.tokenType {
 	case CURLYOPEN:
-		return p.parseObject()
+    parsedObject := p.parseObject()
+		p.syntax = append(p.syntax, parsedObject)
+    return parsedObject
 	case CURLYCLOSE:
 		p.IncrementPos()
-		return p.parse()
+    parsedThing := p.parse()
+		p.syntax = append(p.syntax, parsedThing)
+    return parsedThing
 	case SQUAREOPEN:
-		return p.parseArray()
+    parsedArray := p.parseArray()
+		p.syntax = append(p.syntax, parsedArray)
+    return parsedArray
 	case SQUARECLOSE:
 		p.IncrementPos()
-		return p.parse()
+    parsedThing := p.parse()
+		p.syntax = append(p.syntax, parsedThing)
+    return parsedThing
 	case QUOTATION:
-		return p.parseString()
+    parsedString := p.parseString()
+		p.syntax = append(p.syntax, parsedString)
+    return parsedString
 	case IDENT:
-		return p.parseString()
+    parsedString := p.parseString()
+		p.syntax = append(p.syntax, parsedString)
+    return parsedString
 	case NUMBER:
-		return p.parseNumber()
+    parsedNumber := p.parseNumber()
+		p.syntax = append(p.syntax, parsedNumber)
+    return parsedNumber
 	case COLON:
 		p.IncrementPos() // Skipping the colon because we don't actually care about it.
-		return p.parse()
+    parsedThing := p.parse()
+		p.syntax = append(p.syntax, parsedThing)
+    return parsedThing
 	case COMMA:
 		p.IncrementPos() // Skipping the comma because we don't actually care about it in this context.
-		return p.parse()
+    parsedThing := p.parse()
+		p.syntax = append(p.syntax, parsedThing)
+    return parsedThing
 	default:
-		return nil
+    panic("Why did we get here?")
 	}
 }
