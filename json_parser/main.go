@@ -59,12 +59,13 @@ func main() {
 
 	parser := GetParser(tokens)
 
-	// FIXME: Why are we currently printing the results two times?
 	parser.parse()
 
+  // FIXME: with objects, for example pairs: {...} we have not properly implemented the fact that
+  //  the object is actually the value of pairs.
 	for _, node := range parser.syntax {
 		if eof, ok := node.(EndOfFile); ok {
-			fmt.Printf("File end at position %d\n", eof.endPos)
+			fmt.Printf("EOF - File end at position %d\n", eof.endPos)
 			break
 		} else if contents, ok := node.(ObjectNode); ok {
 			fmt.Printf("Object - start: %d, end: %d, objects: %s\n", contents.startPos, contents.endPos, contents.Objects)
