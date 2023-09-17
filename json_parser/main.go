@@ -51,6 +51,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// TODO: this appending and returning thing is causing hella issues for us.
+	//  It's causing the items to be appended twice..
 	defer file.Close()
 
 	lexer := NewLexer(file)
@@ -61,20 +64,20 @@ func main() {
 
 	parser.parse()
 
-  // FIXME: with objects, for example pairs: {...} we have not properly implemented the fact that
-  //  the object is actually the value of pairs.
+	// FIXME: with objects, for example pairs: {...} we have not properly implemented the fact that
+	//  the object is actually the value of pairs.
 	for _, node := range parser.syntax {
 		if eof, ok := node.(EndOfFile); ok {
 			fmt.Printf("EOF - File end at position %d\n", eof.endPos)
 			break
 		} else if contents, ok := node.(ObjectNode); ok {
-			fmt.Printf("Object - start: %d, end: %d, objects: %s\n", contents.startPos, contents.endPos, contents.Objects)
+			fmt.Printf("Object - start: %d:%d, end: %d:%d, token index: %d, objects: %s\n", contents.startLine, contents.startCol, contents.endLine, contents.endCol, contents.tokenIndex, contents.Objects)
 		} else if contents, ok := node.(ArrayNode); ok {
-			fmt.Printf("Array - start: %d, end: %d, array: %s\n", contents.startPos, contents.endPos, contents.Elements)
+			fmt.Printf("Array - start: %d:%d, end: %d:%d, token index: %d, array: %s\n", contents.startLine, contents.startCol, contents.endLine, contents.endCol, contents.tokenIndex, contents.Elements)
 		} else if contents, ok := node.(StringNode); ok {
-			fmt.Printf("String - start: %d, end: %d, string: %s\n", contents.startPos, contents.endPos, contents.Value)
+			fmt.Printf("String - start: %d:%d, end: %d:%d, token index: %d, string: %s\n", contents.startLine, contents.startCol, contents.endLine, contents.endCol, contents.tokenIndex, contents.Value)
 		} else if contents, ok := node.(NumberNode); ok {
-			fmt.Printf("Number - start: %d, end: %d, number: %.15f\n", contents.startPos, contents.endPos, contents.Value)
+			fmt.Printf("Number - start: %d:%d, end: %d:%d, token index: %d, number: %.15f\n", contents.startLine, contents.startCol, contents.endLine, contents.endCol, contents.tokenIndex, contents.Value)
 		}
 	}
 }
