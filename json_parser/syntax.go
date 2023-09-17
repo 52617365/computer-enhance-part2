@@ -9,38 +9,34 @@ import (
 
 type ObjectNode struct {
 	Objects  map[string]Node
-	startLine int
-	endLine   int
-	startCol int
-  endCol int
-  tokenIndex int
+  startPos Position
+  endPos Position
+  tokenIndexStart int
+  tokenIndexEnd int
 }
 
 type ArrayNode struct {
 	Elements []Node
-	startLine int
-	endLine   int
-	startCol int
-  endCol int
-  tokenIndex int
+  startPos Position
+  endPos Position
+  tokenIndexStart int
+  tokenIndexEnd int
 }
 
 type StringNode struct {
 	Value    string
-	startLine int
-	endLine   int
-	startCol int
-  endCol int
-  tokenIndex int
+  startPos Position
+  endPos Position
+  tokenIndexStart int
+  tokenIndexEnd int
 }
 
 type NumberNode struct {
 	Value    float64
-	startLine int
-	endLine   int
-	startCol int
-  endCol int
-  tokenIndex int
+  startPos Position
+  endPos Position
+  tokenIndexStart int
+  tokenIndexEnd int
 }
 
 type Parser struct {
@@ -76,6 +72,7 @@ func (p *Parser) parseString() StringNode {
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
+  startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != QUOTATION { // FIXME: p.pos out of range here.
 		parsedString = parsedString + p.tokens[p.pos].tokenContents
@@ -90,16 +87,16 @@ func (p *Parser) parseString() StringNode {
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
+  endIndex := p.pos
 
 	p.IncrementPos() // Skipping the closing " character.
 
 	return StringNode{
 		Value:    parsedString,
-    startLine: startLine,
-    startCol: startColumn,
-    endCol: endColumn,
-    endLine: endLine,
-    tokenIndex: p.pos,
+    startPos: Position{line: startLine, column: startColumn},
+    endPos: Position{line: endLine, column: endColumn},
+    tokenIndexStart: startIndex,
+    tokenIndexEnd: endIndex,
 	}
 
 }
@@ -112,10 +109,10 @@ func (p *Parser) parseArray() Node {
 	var elements []Node
 
 	p.IncrementPos() // Skipping the [ character.
-	// p.pos++ // Skipping the [ character.
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
+  startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != SQUARECLOSE {
 
@@ -138,14 +135,14 @@ func (p *Parser) parseArray() Node {
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
+  endIndex := p.pos
 
 	return ArrayNode{
 		Elements: elements,
-    startLine: startLine,
-    startCol: startColumn,
-    endCol: endColumn,
-    endLine: endLine,
-    tokenIndex: p.pos,
+    startPos: Position{line: startLine, column: startColumn},
+    endPos: Position{line: endLine, column: endColumn},
+    tokenIndexStart: startIndex,
+    tokenIndexEnd: endIndex,
 	}
 }
 
@@ -154,6 +151,7 @@ func (p *Parser) parseNumber() NumberNode {
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
+  startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
 		parsedNumber = p.tokens[p.pos].tokenContents
@@ -167,16 +165,16 @@ func (p *Parser) parseNumber() NumberNode {
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
+  endIndex := p.pos
 
 	castedFloat, _ := strconv.ParseFloat(strings.TrimSpace(parsedNumber), 64)
 
 	return NumberNode{
 		Value:    castedFloat,
-    startLine: startLine,
-    startCol: startColumn,
-    endCol: endColumn,
-    endLine: endLine,
-    tokenIndex: p.pos,
+    startPos: Position{line: startLine, column: startColumn},
+    endPos: Position{line: endLine, column: endColumn},
+    tokenIndexStart: startIndex,
+    tokenIndexEnd: endIndex,
 	}
 
 }
@@ -191,6 +189,7 @@ func (p *Parser) parseObject() Node {
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
+  startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != CURLYCLOSE {
 
@@ -245,6 +244,7 @@ func (p *Parser) parseObject() Node {
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
+  endIndex := p.pos
 
 	if p.tokens[p.pos].tokenType != CURLYCLOSE {
 		panic("Expected the current token type to be CURLYCLOSE")
@@ -252,10 +252,10 @@ func (p *Parser) parseObject() Node {
 
 	return ObjectNode{
 		Objects:  pairs,
-    startLine: startLine,
-    startCol: startColumn,
-    endCol: endColumn,
-    endLine: endLine,
+    startPos: Position{line: startLine, column: startColumn},
+    endPos: Position{line: endLine, column: endColumn},
+    tokenIndexStart: startIndex,
+    tokenIndexEnd: endIndex,
 	}
 }
 

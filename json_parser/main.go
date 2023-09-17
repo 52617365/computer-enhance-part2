@@ -40,11 +40,8 @@ func readFileToString(filePath string) string {
 func main() {
 	arguments := parseArguments()
 
-	// data := readFileToString(arguments.filePath)
-
 	fmt.Printf("-------------\n")
 	fmt.Printf("File path: %s\n", arguments.filePath)
-	// fmt.Printf("Data:\n%s\n", data)
 	fmt.Printf("-------------\n")
 
 	file, err := os.Open(arguments.filePath)
@@ -71,13 +68,13 @@ func main() {
 			fmt.Printf("EOF - File end at position %d\n", eof.endPos)
 			break
 		} else if contents, ok := node.(ObjectNode); ok {
-			fmt.Printf("Object - start: %d:%d, end: %d:%d, token index: %d, objects: %s\n", contents.startLine, contents.startCol, contents.endLine, contents.endCol, contents.tokenIndex, contents.Objects)
+      fmt.Printf("Object - start: %d:%d, end: %d:%d, token index range: %d:%d, objects: %s\n", contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Objects)
 		} else if contents, ok := node.(ArrayNode); ok {
-			fmt.Printf("Array - start: %d:%d, end: %d:%d, token index: %d, array: %s\n", contents.startLine, contents.startCol, contents.endLine, contents.endCol, contents.tokenIndex, contents.Elements)
+			fmt.Printf("Array - start: %d:%d, end: %d:%d, token index range: %d:%d, array: %s\n", contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Elements)
 		} else if contents, ok := node.(StringNode); ok {
-			fmt.Printf("String - start: %d:%d, end: %d:%d, token index: %d, string: %s\n", contents.startLine, contents.startCol, contents.endLine, contents.endCol, contents.tokenIndex, contents.Value)
+			fmt.Printf("String - start: %d:%d, end: %d:%d, token index range: %d:%d, string: %s\n", contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Value)
 		} else if contents, ok := node.(NumberNode); ok {
-			fmt.Printf("Number - start: %d:%d, end: %d:%d, token index: %d, number: %.15f\n", contents.startLine, contents.startCol, contents.endLine, contents.endCol, contents.tokenIndex, contents.Value)
-		}
-	}
+			fmt.Printf("Number - start: %d:%d, end: %d:%d, token index range: %d:%d, number: %.15f\n",  contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Value)
+  }
+	  }
 }
