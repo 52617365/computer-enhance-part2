@@ -69,23 +69,19 @@ func printContents(n Node) {
 		fmt.Printf("EOF - File end at position %d\n", eof.endPos)
 		return
 	} else if contents, ok := n.(ObjectNode); ok {
-
 		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
 
 		for k, v := range contents.Objects {
-			fmt.Printf("%s:\t", k)
+			fmt.Printf("%s: ", k)
 			printContents(v)
-			fmt.Printf("\n")
 		}
 
 	} else if contents, ok := n.(ArrayNode); ok {
-
 		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
 
 		for k, v := range contents.Elements {
       fmt.Printf("Array [%d]: ", k)
 			printContents(v)
-			fmt.Printf("\n")
 		}
 
 	} else if contents, ok := n.(StringNode); ok {
