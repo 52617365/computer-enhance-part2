@@ -64,17 +64,18 @@ func main() {
 	// FIXME: with objects, for example pairs: {...} we have not properly implemented the fact that
 	//  the object is actually the value of pairs.
 	for _, node := range parser.syntax {
-		if eof, ok := node.(EndOfFile); ok {
-			fmt.Printf("EOF - File end at position %d\n", eof.endPos)
-			break
-		} else if contents, ok := node.(ObjectNode); ok {
-      fmt.Printf("Object - start: %d:%d, end: %d:%d, token index range: %d:%d, objects: %s\n", contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Objects)
-		} else if contents, ok := node.(ArrayNode); ok {
-			fmt.Printf("Array - start: %d:%d, end: %d:%d, token index range: %d:%d, array: %s\n", contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Elements)
-		} else if contents, ok := node.(StringNode); ok {
-			fmt.Printf("String - start: %d:%d, end: %d:%d, token index range: %d:%d, string: %s\n", contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Value)
-		} else if contents, ok := node.(NumberNode); ok {
-			fmt.Printf("Number - start: %d:%d, end: %d:%d, token index range: %d:%d, number: %.15f\n",  contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Value)
+    if eof, ok := node.(EndOfFile); ok { 
+      fmt.Printf("EOF - File end at position %d\n", eof.endPos) 
+    break 
+    } else if contents, ok := node.(ObjectNode); ok {
+      fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d, %s\n", contents.nodeType, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Objects)
+    } else if contents, ok := node.(ArrayNode); ok {
+      fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d, %s\n", contents.nodeType, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Elements)
+    } else if contents, ok := node.(StringNode); ok {
+      fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d, %s\n", contents.nodeType, contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Value)
+    } else if contents, ok := node.(NumberNode); ok {
+      fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d, %.15f\n", contents.nodeType, contents.startPos.line, contents.startPos.column, contents.endPos.line, contents.endPos.column, contents.tokenIndexStart, contents.tokenIndexEnd, contents.Value)
+    }
   }
-	  }
+
 }

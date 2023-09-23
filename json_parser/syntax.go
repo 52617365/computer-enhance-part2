@@ -6,8 +6,10 @@ import (
 )
 
 // NOTE: We probably don't need to build an AST to parse JSON but I'll do it anyway just in case and to learn.
+// TODO: Why are we never getting the object node in our main calling code? Makes zero sense.
 
 type ObjectNode struct {
+  nodeType string
 	Objects  map[string]Node
   startPos Position
   endPos Position
@@ -16,6 +18,7 @@ type ObjectNode struct {
 }
 
 type ArrayNode struct {
+  nodeType string
 	Elements []Node
   startPos Position
   endPos Position
@@ -24,6 +27,7 @@ type ArrayNode struct {
 }
 
 type StringNode struct {
+  nodeType string
 	Value    string
   startPos Position
   endPos Position
@@ -32,6 +36,7 @@ type StringNode struct {
 }
 
 type NumberNode struct {
+  nodeType string
 	Value    float64
   startPos Position
   endPos Position
@@ -78,7 +83,6 @@ func (p *Parser) parseString() StringNode {
 		parsedString = parsedString + p.tokens[p.pos].tokenContents
 
 		p.IncrementPos()
-		// p.pos++
 	}
 
 	if p.tokens[p.pos].tokenType != QUOTATION {
@@ -92,6 +96,7 @@ func (p *Parser) parseString() StringNode {
 	p.IncrementPos() // Skipping the closing " character.
 
 	return StringNode{
+    nodeType: "string",
 		Value:    parsedString,
     startPos: Position{line: startLine, column: startColumn},
     endPos: Position{line: endLine, column: endColumn},
@@ -126,7 +131,6 @@ func (p *Parser) parseArray() Node {
 		elements = append(elements, node)
 
 		p.IncrementPos()
-		// p.pos++
 	}
 
 	if p.tokens[p.pos].tokenType != SQUARECLOSE {
@@ -138,6 +142,7 @@ func (p *Parser) parseArray() Node {
   endIndex := p.pos
 
 	return ArrayNode{
+    nodeType: "array",
 		Elements: elements,
     startPos: Position{line: startLine, column: startColumn},
     endPos: Position{line: endLine, column: endColumn},
@@ -170,6 +175,7 @@ func (p *Parser) parseNumber() NumberNode {
 	castedFloat, _ := strconv.ParseFloat(strings.TrimSpace(parsedNumber), 64)
 
 	return NumberNode{
+    nodeType: "number",
 		Value:    castedFloat,
     startPos: Position{line: startLine, column: startColumn},
     endPos: Position{line: endLine, column: endColumn},
@@ -183,6 +189,7 @@ func (p *Parser) parseObject() Node {
 	if p.tokens[p.pos].tokenType != CURLYOPEN {
 		panic("Expected the current token type to be CURLYOPEN")
 	}
+
 	pairs := make(map[string]Node)
 
 	p.IncrementPos() // Skipping the { character.
@@ -251,6 +258,7 @@ func (p *Parser) parseObject() Node {
 	}
 
 	return ObjectNode{
+    nodeType: "object",
 		Objects:  pairs,
     startPos: Position{line: startLine, column: startColumn},
     endPos: Position{line: endLine, column: endColumn},

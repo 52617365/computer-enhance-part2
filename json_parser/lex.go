@@ -1,5 +1,6 @@
 package main
 
+// NOTE: In theory we should have to implement booleans but for Casey's homework I don't think we need to.
 import (
   "io"
   "bufio"
