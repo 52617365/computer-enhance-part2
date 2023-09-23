@@ -76,7 +76,6 @@ func printContents(n Node) {
 			fmt.Printf("%s:\t", k)
 			printContents(v)
 			fmt.Printf("\n")
-			// fmt.Printf("Key: %s ", k)
 		}
 
 	} else if contents, ok := n.(ArrayNode); ok {
@@ -106,7 +105,7 @@ func GetParser(tokens []Token) *Parser {
 func (p *Parser) parseString() StringNode {
 	var parsedString string
 
-	p.IncrementPos() // Skipping the " character.
+	p.IncrementPos() // Getting rid of the opening " character.
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
@@ -126,7 +125,7 @@ func (p *Parser) parseString() StringNode {
 	endColumn := p.tokens[p.pos].pos.column
 	endIndex := p.pos
 
-	p.IncrementPos() // Skipping the closing " character.
+	p.IncrementPos() // Getting rid of the closing " character.
 
 	return StringNode{
 		nodeType:        "string",
@@ -146,7 +145,7 @@ func (p *Parser) parseArray() Node {
 
 	var elements []Node
 
-	p.IncrementPos() // Skipping the [ character.
+	p.IncrementPos() // Getting rid of the [ character.
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
@@ -159,8 +158,6 @@ func (p *Parser) parseArray() Node {
 		// return early if we hit end of file with parse
 		if _, ok := node.(EndOfFile); ok {
 			panic(fmt.Sprintf("endPos: %d, error: %s", p.pos, "Expected a closing square bracket but got EOF."))
-			//return ErrorNode{endPos: p.pos, error: "Expected a closing square bracket but got EOF."}
-			// return EndOfFile{endPos: p.pos}
 		}
 
 		elements = append(elements, node)
@@ -169,15 +166,13 @@ func (p *Parser) parseArray() Node {
 			p.IncrementPos()
 		}
 
-		// p.IncrementPos()
 	}
 
 	if p.tokens[p.pos].tokenType != SQUARECLOSE {
 		panic(fmt.Sprintf("endPos: %d, error: %s", p.pos, "Expected the current token type to be SQUARECLOSE."))
-		// panic("Expected the current token type to be SQUARECLOSE.")
 	}
 
-	p.IncrementPos() // Getting rid of the closing square bracket.
+	p.IncrementPos() // Getting rid of the ] character.
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
@@ -234,7 +229,7 @@ func (p *Parser) parseObject() Node {
 
 	pairs := make(map[string]Node)
 
-	p.IncrementPos() // Skipping the { character.
+	p.IncrementPos() // Getting rid of the { character.
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
@@ -255,37 +250,14 @@ func (p *Parser) parseObject() Node {
 
 		keyCast, found := key.(StringNode)
 		if !found {
-			panic("Expected a string here.")
+			panic("Expected key to be a string.")
 		}
 
 		pairs[keyCast.Value] = value
 
 		if p.tokens[p.pos].tokenType == COMMA {
 			p.IncrementPos()
-			// key = p.parse()
-			//
-			// // return early if we hit end of file with key parse.
-			// if _, ok := key.(EndOfFile); ok {
-			// 	return EndOfFile{endPos: p.pos}
-			// }
-			//
-			// keyCast, found := key.(StringNode)
-			//
-			// if !found {
-			// 	panic("Expected a string here.")
-			// }
-			//
-			// node := p.parse()
-			//
-			// // return early if we hit end of file
-			// if _, ok := node.(EndOfFile); ok {
-			// 	return EndOfFile{endPos: p.pos}
-			// }
-			//
-			// pairs[keyCast.Value] = node
 		}
-
-		// p.IncrementPos()
 	}
 
 	endLine := p.tokens[p.pos].pos.line
@@ -296,7 +268,7 @@ func (p *Parser) parseObject() Node {
 		panic("Expected the current token type to be CURLYCLOSE")
 	}
 
-	p.IncrementPos() // Getting rid of }
+	p.IncrementPos() // Getting rid of the } character.
 
 	return ObjectNode{
 		nodeType:        "object",
@@ -309,35 +281,23 @@ func (p *Parser) parseObject() Node {
 }
 
 func (p *Parser) parse() Node {
-	if p.pos >= len(p.tokens) {
-		p.syntax = append(p.syntax, EndOfFile{endPos: p.pos})
-		return EndOfFile{endPos: p.pos}
-	}
-
-	// NOTE: We have checked that the results seem to be ok. Now we have to build the AST.
-
 	token := p.tokens[p.pos]
 
 	switch token.tokenType {
 	case CURLYOPEN:
 		parsedObject := p.parseObject()
-		p.syntax = append(p.syntax, parsedObject)
 		return parsedObject
 	case SQUAREOPEN:
 		parsedArray := p.parseArray()
-		p.syntax = append(p.syntax, parsedArray)
 		return parsedArray
 	case QUOTATION:
 		parsedString := p.parseString()
-		// p.syntax = append(p.syntax, parsedString)
 		return parsedString
 	case IDENT:
 		parsedString := p.parseString()
-		// p.syntax = append(p.syntax, parsedString)
 		return parsedString
 	case NUMBER:
 		parsedNumber := p.parseNumber()
-		// p.syntax = append(p.syntax, parsedNumber)
 		return parsedNumber
 	case COLON:
 		p.IncrementPos() // Skipping the colon because we don't actually care about it.
