@@ -86,8 +86,12 @@ func printContents(n Node) {
 
 	} else if contents, ok := n.(StringNode); ok {
 		fmt.Printf("%s\n", contents.Value)
+		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+		fmt.Printf("\n")
 	} else if contents, ok := n.(NumberNode); ok {
 		fmt.Printf("%.15f\n", contents.Value)
+		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+		fmt.Printf("\n")
 	}
 }
 
