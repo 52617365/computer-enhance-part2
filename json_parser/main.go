@@ -59,7 +59,7 @@ func main() {
 
 	parser := GetParser(tokens)
 
-  ast := parser.parse()
+	ast := parser.parse()
 
-  printContents(ast)
+	printContents(ast)
 }
