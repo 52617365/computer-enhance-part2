@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -9,39 +10,39 @@ import (
 // TODO: Why are we never getting the object node in our main calling code? Makes zero sense.
 
 type ObjectNode struct {
-  nodeType string
-	Objects  map[string]Node
-  startPos Position
-  endPos Position
-  tokenIndexStart int
-  tokenIndexEnd int
+	nodeType        string
+	Objects         map[string]Node
+	startPos        Position
+	endPos          Position
+	tokenIndexStart int
+	tokenIndexEnd   int
 }
 
 type ArrayNode struct {
-  nodeType string
-	Elements []Node
-  startPos Position
-  endPos Position
-  tokenIndexStart int
-  tokenIndexEnd int
+	nodeType        string
+	Elements        []Node
+	startPos        Position
+	endPos          Position
+	tokenIndexStart int
+	tokenIndexEnd   int
 }
 
 type StringNode struct {
-  nodeType string
-	Value    string
-  startPos Position
-  endPos Position
-  tokenIndexStart int
-  tokenIndexEnd int
+	nodeType        string
+	Value           string
+	startPos        Position
+	endPos          Position
+	tokenIndexStart int
+	tokenIndexEnd   int
 }
 
 type NumberNode struct {
-  nodeType string
-	Value    float64
-  startPos Position
-  endPos Position
-  tokenIndexStart int
-  tokenIndexEnd int
+	nodeType        string
+	Value           float64
+	startPos        Position
+	endPos          Position
+	tokenIndexStart int
+	tokenIndexEnd   int
 }
 
 type Parser struct {
@@ -63,6 +64,38 @@ func (p *Parser) IncrementPos() {
 // Node interface to represent AST nodes
 type Node interface{}
 
+func printContents(n Node) {
+	if eof, ok := n.(EndOfFile); ok {
+		fmt.Printf("EOF - File end at position %d\n", eof.endPos)
+		return
+	} else if contents, ok := n.(ObjectNode); ok {
+
+		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+
+		for k, v := range contents.Objects {
+			fmt.Printf("%s:\t", k)
+			printContents(v)
+			fmt.Printf("\n")
+			// fmt.Printf("Key: %s ", k)
+		}
+
+	} else if contents, ok := n.(ArrayNode); ok {
+
+		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+
+		for k, v := range contents.Elements {
+      fmt.Printf("Array [%d]: ", k)
+			printContents(v)
+			fmt.Printf("\n")
+		}
+
+	} else if contents, ok := n.(StringNode); ok {
+		fmt.Printf("%s\n", contents.Value)
+	} else if contents, ok := n.(NumberNode); ok {
+		fmt.Printf("%.15f\n", contents.Value)
+	}
+}
+
 func GetParser(tokens []Token) *Parser {
 	return &Parser{
 		tokens: tokens,
@@ -77,7 +110,7 @@ func (p *Parser) parseString() StringNode {
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
-  startIndex := p.pos
+	startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != QUOTATION { // FIXME: p.pos out of range here.
 		parsedString = parsedString + p.tokens[p.pos].tokenContents
@@ -91,17 +124,17 @@ func (p *Parser) parseString() StringNode {
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
-  endIndex := p.pos
+	endIndex := p.pos
 
 	p.IncrementPos() // Skipping the closing " character.
 
 	return StringNode{
-    nodeType: "string",
-		Value:    parsedString,
-    startPos: Position{line: startLine, column: startColumn},
-    endPos: Position{line: endLine, column: endColumn},
-    tokenIndexStart: startIndex,
-    tokenIndexEnd: endIndex,
+		nodeType:        "string",
+		Value:           parsedString,
+		startPos:        Position{line: startLine, column: startColumn},
+		endPos:          Position{line: endLine, column: endColumn},
+		tokenIndexStart: startIndex,
+		tokenIndexEnd:   endIndex,
 	}
 
 }
@@ -117,7 +150,7 @@ func (p *Parser) parseArray() Node {
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
-  startIndex := p.pos
+	startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != SQUARECLOSE {
 
@@ -125,29 +158,38 @@ func (p *Parser) parseArray() Node {
 
 		// return early if we hit end of file with parse
 		if _, ok := node.(EndOfFile); ok {
-			return EndOfFile{endPos: p.pos}
+			panic(fmt.Sprintf("endPos: %d, error: %s", p.pos, "Expected a closing square bracket but got EOF."))
+			//return ErrorNode{endPos: p.pos, error: "Expected a closing square bracket but got EOF."}
+			// return EndOfFile{endPos: p.pos}
 		}
 
 		elements = append(elements, node)
 
-		p.IncrementPos()
+		if p.tokens[p.pos].tokenType == COMMA {
+			p.IncrementPos()
+		}
+
+		// p.IncrementPos()
 	}
 
 	if p.tokens[p.pos].tokenType != SQUARECLOSE {
-		panic("Expected the current token type to be SQUARECLOSE.")
+		panic(fmt.Sprintf("endPos: %d, error: %s", p.pos, "Expected the current token type to be SQUARECLOSE."))
+		// panic("Expected the current token type to be SQUARECLOSE.")
 	}
+
+	p.IncrementPos() // Getting rid of the closing square bracket.
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
-  endIndex := p.pos
+	endIndex := p.pos
 
 	return ArrayNode{
-    nodeType: "array",
-		Elements: elements,
-    startPos: Position{line: startLine, column: startColumn},
-    endPos: Position{line: endLine, column: endColumn},
-    tokenIndexStart: startIndex,
-    tokenIndexEnd: endIndex,
+		nodeType:        "array",
+		Elements:        elements,
+		startPos:        Position{line: startLine, column: startColumn},
+		endPos:          Position{line: endLine, column: endColumn},
+		tokenIndexStart: startIndex,
+		tokenIndexEnd:   endIndex,
 	}
 }
 
@@ -156,7 +198,7 @@ func (p *Parser) parseNumber() NumberNode {
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
-  startIndex := p.pos
+	startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
 		parsedNumber = p.tokens[p.pos].tokenContents
@@ -170,17 +212,17 @@ func (p *Parser) parseNumber() NumberNode {
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
-  endIndex := p.pos
+	endIndex := p.pos
 
 	castedFloat, _ := strconv.ParseFloat(strings.TrimSpace(parsedNumber), 64)
 
 	return NumberNode{
-    nodeType: "number",
-		Value:    castedFloat,
-    startPos: Position{line: startLine, column: startColumn},
-    endPos: Position{line: endLine, column: endColumn},
-    tokenIndexStart: startIndex,
-    tokenIndexEnd: endIndex,
+		nodeType:        "number",
+		Value:           castedFloat,
+		startPos:        Position{line: startLine, column: startColumn},
+		endPos:          Position{line: endLine, column: endColumn},
+		tokenIndexStart: startIndex,
+		tokenIndexEnd:   endIndex,
 	}
 
 }
@@ -196,74 +238,73 @@ func (p *Parser) parseObject() Node {
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
-  startIndex := p.pos
+	startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != CURLYCLOSE {
 
 		key := p.parse()
 		value := p.parse()
 
-		// return early if we hit end of file with key parse.
 		if _, ok := key.(EndOfFile); ok {
-			return EndOfFile{endPos: p.pos}
+			panic("Reached EOF before closing curly bracket")
 		}
 
-		// return early if we hit end of file with value parse.
 		if _, ok := value.(EndOfFile); ok {
-			return EndOfFile{endPos: p.pos}
+			panic("Reached EOF before closing curly bracket")
 		}
 
-    // NOTE: This
-	  keyCast, found := key.(StringNode)
-    if !found {
-      panic("Expected a string here.")
-    }
+		keyCast, found := key.(StringNode)
+		if !found {
+			panic("Expected a string here.")
+		}
 
-    pairs[keyCast.Value] = value
-    // NOTE: To this needs testing, I'm not sure if it's ok. It's the morning as I'm writing this.
+		pairs[keyCast.Value] = value
 
 		if p.tokens[p.pos].tokenType == COMMA {
-			key = p.parse()
-
-			// return early if we hit end of file with key parse.
-			if _, ok := key.(EndOfFile); ok {
-				return EndOfFile{endPos: p.pos}
-			}
-
-			keyCast, found := key.(StringNode)
-
-			if !found {
-				panic("Expected a string here.")
-			}
-
-			node := p.parse()
-
-			// return early if we hit end of file
-			if _, ok := node.(EndOfFile); ok {
-				return EndOfFile{endPos: p.pos}
-			}
-
-			pairs[keyCast.Value] = node
+			p.IncrementPos()
+			// key = p.parse()
+			//
+			// // return early if we hit end of file with key parse.
+			// if _, ok := key.(EndOfFile); ok {
+			// 	return EndOfFile{endPos: p.pos}
+			// }
+			//
+			// keyCast, found := key.(StringNode)
+			//
+			// if !found {
+			// 	panic("Expected a string here.")
+			// }
+			//
+			// node := p.parse()
+			//
+			// // return early if we hit end of file
+			// if _, ok := node.(EndOfFile); ok {
+			// 	return EndOfFile{endPos: p.pos}
+			// }
+			//
+			// pairs[keyCast.Value] = node
 		}
 
-		p.IncrementPos()
+		// p.IncrementPos()
 	}
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
-  endIndex := p.pos
+	endIndex := p.pos
 
 	if p.tokens[p.pos].tokenType != CURLYCLOSE {
 		panic("Expected the current token type to be CURLYCLOSE")
 	}
 
+	p.IncrementPos() // Getting rid of }
+
 	return ObjectNode{
-    nodeType: "object",
-		Objects:  pairs,
-    startPos: Position{line: startLine, column: startColumn},
-    endPos: Position{line: endLine, column: endColumn},
-    tokenIndexStart: startIndex,
-    tokenIndexEnd: endIndex,
+		nodeType:        "object",
+		Objects:         pairs,
+		startPos:        Position{line: startLine, column: startColumn},
+		endPos:          Position{line: endLine, column: endColumn},
+		tokenIndexStart: startIndex,
+		tokenIndexEnd:   endIndex,
 	}
 }
 
@@ -273,42 +314,33 @@ func (p *Parser) parse() Node {
 		return EndOfFile{endPos: p.pos}
 	}
 
-  // NOTE: We have checked that the results seem to be ok. Now we have to build the AST.
+	// NOTE: We have checked that the results seem to be ok. Now we have to build the AST.
 
 	token := p.tokens[p.pos]
 
 	switch token.tokenType {
 	case CURLYOPEN:
-    parsedObject := p.parseObject()
-    p.syntax = append(p.syntax, parsedObject)
+		parsedObject := p.parseObject()
+		p.syntax = append(p.syntax, parsedObject)
 		return parsedObject
-	case CURLYCLOSE:
-		p.IncrementPos()
-		return p.parse()
 	case SQUAREOPEN:
-    parsedArray := p.parseArray()
-    p.syntax = append(p.syntax, parsedArray)
+		parsedArray := p.parseArray()
+		p.syntax = append(p.syntax, parsedArray)
 		return parsedArray
-	case SQUARECLOSE:
-		p.IncrementPos()
-		return p.parse()
 	case QUOTATION:
-    parsedString := p.parseString()
-    p.syntax = append(p.syntax, parsedString)
-    return parsedString
+		parsedString := p.parseString()
+		// p.syntax = append(p.syntax, parsedString)
+		return parsedString
 	case IDENT:
-    parsedString := p.parseString()
-    p.syntax = append(p.syntax, parsedString)
-    return parsedString
+		parsedString := p.parseString()
+		// p.syntax = append(p.syntax, parsedString)
+		return parsedString
 	case NUMBER:
-    parsedNumber := p.parseNumber()
-    p.syntax = append(p.syntax, parsedNumber)
-    return parsedNumber
+		parsedNumber := p.parseNumber()
+		// p.syntax = append(p.syntax, parsedNumber)
+		return parsedNumber
 	case COLON:
 		p.IncrementPos() // Skipping the colon because we don't actually care about it.
-		return p.parse()
-	case COMMA:
-		p.IncrementPos() // Skipping the comma because we don't actually care about it in this context.
 		return p.parse()
 	default:
 		panic("Why did we get here?")

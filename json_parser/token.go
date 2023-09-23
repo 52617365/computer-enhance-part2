@@ -42,4 +42,3 @@ func (t TokenType) String() string {
   }
   return tokens[t]
 }
-
