@@ -76,14 +76,13 @@ func printContents(n Node) {
 		}
 
 	} else if contents, ok := n.(ArrayNode); ok {
-    fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
 
 		for k, v := range contents.Elements {
 			fmt.Printf("\nArray [%d]: ", k)
 			printContents(v)
-      fmt.Printf("----")
+			fmt.Printf("----")
 		}
-
 
 	} else if contents, ok := n.(StringNode); ok {
 		fmt.Printf("%s\t", contents.Value)
@@ -171,12 +170,11 @@ func (p *Parser) parseArray() Node {
 		panic(fmt.Sprintf("endPos: %d, error: %s", p.pos, "Expected the current token type to be SQUARECLOSE."))
 	}
 
-	p.IncrementPos() // Getting rid of the ] character.
-
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
 	endIndex := p.pos
 
+	p.IncrementPos() // Getting rid of the ] character.
 	return ArrayNode{
 		nodeType:        "array",
 		Elements:        elements,

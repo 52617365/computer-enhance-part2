@@ -49,8 +49,6 @@ func main() {
 		panic(err)
 	}
 
-	// TODO: this appending and returning thing is causing hella issues for us.
-	//  It's causing the items to be appended twice..
 	defer file.Close()
 
 	lexer := NewLexer(file)
