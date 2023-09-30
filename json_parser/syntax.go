@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/kr/pretty"
 	"strconv"
 	"strings"
 )
@@ -73,38 +74,39 @@ func (p *Parser) IncrementPos() {
 type Node interface{}
 
 func printContents(n Node) {
+	//fmt.Println()
 	if eof, ok := n.(EndOfFile); ok {
 		fmt.Printf("EOF - File end at position %d\n", eof.endPos)
 		return
-	} else if contents, ok := n.(ObjectNode); ok {
-		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+	} /*else if contents, ok := n.(ObjectNode); ok {*/
+	//	fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+	//
+	//	for k, v := range contents.Objects {
+	//		fmt.Printf("%s: ", k)
+	//		printContents(v)
+	//	}
+	//
+	//} else if contents, ok := n.(ArrayNode); ok {
+	//	fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+	//
+	//	for k, v := range contents.Elements {
+	//		fmt.Printf("Array [%d]: ", k)
+	//		printContents(v)
+	//	}
 
-		for k, v := range contents.Objects {
-			fmt.Printf("%s: ", k)
-			printContents(v)
-		}
-
-	} else if contents, ok := n.(ArrayNode); ok {
-		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-
-		for k, v := range contents.Elements {
-			fmt.Printf("\nArray [%d]: ", k)
-			printContents(v)
-			fmt.Printf("----")
-		}
-
-	} else if contents, ok := n.(StringNode); ok {
-		fmt.Printf("%s\t", contents.Value)
-		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-	} else if contents, ok := n.(NumberNode); ok {
-		fmt.Printf("%.15f\t", contents.Value)
-		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-	} else if contents, ok := n.(BooleanNode); ok {
-		fmt.Printf("%s\t", contents.Value)
-		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-	} else {
-		fmt.Printf("Unknown node type: %s\n", n)
-	}
+	fmt.Printf("%# v", pretty.Formatter(n))
+	//} else if contents, ok := n.(StringNode); ok {
+	//	fmt.Printf("%s", contents.Value)
+	//	fmt.Printf(" %s- start: %d:%d, end: %d:%d, token index range: %d:%d", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+	//} else if contents, ok := n.(NumberNode); ok {
+	//	fmt.Printf("%.15f", contents.Value)
+	//	fmt.Printf(" %s - start: %d:%d, end: %d:%d, token index range: %d:%d", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+	//} else if contents, ok := n.(BooleanNode); ok {
+	//	fmt.Printf("%s", contents.Value)
+	//	fmt.Printf(" %s - start: %d:%d, end: %d:%d, token index range: %d:%d", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+	//} else {
+	//	fmt.Printf("Unknown node type: %s\n", n)
+	//}
 }
 
 func GetParser(tokens []Token) *Parser {
