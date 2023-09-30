@@ -117,7 +117,8 @@ func (l *Lexer) Lex() Token {
 		default:
 			if unicode.IsSpace(r) {
 				continue // nothing to do here, just move on
-			} else if unicode.IsDigit(r) || unicode.IsSpace(r) || unicode.IsLetter(r) || isIdentSymbol(r) {
+			} else if unicode.IsDigit(r) || unicode.IsLetter(r) || isIdentSymbol(r) {
+
 				// backup and let lexIdent rescan the beginning of the ident
 				startPos := l.pos
 				l.backup()
@@ -126,7 +127,7 @@ func (l *Lexer) Lex() Token {
 				isNumber := true
 
 				for _, r := range lit {
-					if unicode.IsLetter(r) || unicode.IsSpace(r) {
+					if !unicode.IsNumber(r) && r != '-' && r != '.' {
 						isNumber = false
 					}
 				}
@@ -185,8 +186,9 @@ func (l *Lexer) lexIdent() string {
 	}
 }
 
+// TODO: how do we handle the ',' character? It can be within a string, but it can also be a delimiter.
 func isIdentSymbol(r rune) bool {
-	if r == '.' || r == '-' || r == '_' || r == '$' || r == '+' {
+	if r == '.' || r == '-' || r == '_' || r == '$' || r == '+' || r == '!' || r == '(' || r == ')' {
 		return true
 	} else {
 		return false
