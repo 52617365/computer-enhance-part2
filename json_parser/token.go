@@ -20,6 +20,8 @@ const (
 	IDENT
 	NUMBER
 	ILLEGAL
+
+	BOOLEAN
 )
 
 var tokens = []string{
@@ -33,6 +35,7 @@ var tokens = []string{
 	IDENT:       "IDENT",
 	NUMBER:      "NUMBER",
 	ILLEGAL:     "ILLEGAL",
+	BOOLEAN:     "BOOLEAN",
 }
 
 func (t TokenType) String() string {

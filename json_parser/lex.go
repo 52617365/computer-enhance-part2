@@ -117,7 +117,7 @@ func (l *Lexer) Lex() Token {
 		default:
 			if unicode.IsSpace(r) {
 				continue // nothing to do here, just move on
-			} else if unicode.IsDigit(r) || unicode.IsLetter(r) || isIdentSymbol(r) {
+			} else if unicode.IsDigit(r) || unicode.IsSpace(r) || unicode.IsLetter(r) || isIdentSymbol(r) {
 				// backup and let lexIdent rescan the beginning of the ident
 				startPos := l.pos
 				l.backup()
@@ -126,7 +126,7 @@ func (l *Lexer) Lex() Token {
 				isNumber := true
 
 				for _, r := range lit {
-					if unicode.IsLetter(r) {
+					if unicode.IsLetter(r) || unicode.IsSpace(r) {
 						isNumber = false
 					}
 				}
@@ -135,6 +135,12 @@ func (l *Lexer) Lex() Token {
 					return Token{
 						pos:           startPos,
 						tokenType:     NUMBER,
+						tokenContents: lit,
+					}
+				} else if lit == "true" || lit == "false" {
+					return Token{
+						pos:           startPos,
+						tokenType:     BOOLEAN,
 						tokenContents: lit,
 					}
 				} else {
@@ -169,7 +175,7 @@ func (l *Lexer) lexIdent() string {
 		}
 
 		l.pos.column++
-		if unicode.IsLetter(r) || unicode.IsNumber(r) || isIdentSymbol(r) {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) || isIdentSymbol(r) || unicode.IsSpace(r) {
 			lit = lit + string(r)
 		} else {
 			// scanned something not in the identifier
@@ -180,7 +186,7 @@ func (l *Lexer) lexIdent() string {
 }
 
 func isIdentSymbol(r rune) bool {
-	if r == '.' || r == '-' {
+	if r == '.' || r == '-' || r == '_' || r == '$' || r == '+' {
 		return true
 	} else {
 		return false

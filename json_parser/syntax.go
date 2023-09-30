@@ -36,6 +36,15 @@ type StringNode struct {
 	tokenIndexEnd   int
 }
 
+type BooleanNode struct {
+	nodeType        string
+	Value           string
+	startPos        Position
+	endPos          Position
+	tokenIndexStart int
+	tokenIndexEnd   int
+}
+
 type NumberNode struct {
 	nodeType        string
 	Value           float64
@@ -90,6 +99,11 @@ func printContents(n Node) {
 	} else if contents, ok := n.(NumberNode); ok {
 		fmt.Printf("%.15f\t", contents.Value)
 		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+	} else if contents, ok := n.(BooleanNode); ok {
+		fmt.Printf("%s\t", contents.Value)
+		fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
+	} else {
+		fmt.Printf("Unknown node type: %s\n", n)
 	}
 }
 
@@ -100,7 +114,43 @@ func GetParser(tokens []Token) *Parser {
 	}
 }
 
-func (p *Parser) parseString() StringNode {
+func (p *Parser) parseBoolean() Node {
+	var parsedBoolean string
+
+	startLine := p.tokens[p.pos].pos.line
+	startColumn := p.tokens[p.pos].pos.column
+	startIndex := p.pos
+
+	//p.IncrementPos() // Getting rid of the opening " character.
+
+	//for p.tokens[p.pos].tokenType != QUOTATION {
+	parsedBoolean = parsedBoolean + p.tokens[p.pos].tokenContents
+
+	p.IncrementPos()
+	//}
+
+	//if p.tokens[p.pos].tokenType != QUOTATION {
+	//	panic("Error while parsing boolean")
+	//}
+
+	p.IncrementPos() // Getting rid of the opening " character.
+
+	endLine := p.tokens[p.pos].pos.line
+	endColumn := p.tokens[p.pos].pos.column
+	endIndex := p.pos
+
+	return BooleanNode{
+		nodeType:        "boolean",
+		Value:           parsedBoolean,
+		startPos:        Position{line: startLine, column: startColumn},
+		endPos:          Position{line: endLine, column: endColumn},
+		tokenIndexStart: startIndex,
+		tokenIndexEnd:   endIndex,
+	}
+
+}
+
+func (p *Parser) parseString() Node {
 	var parsedString string
 
 	p.IncrementPos() // Getting rid of the opening " character.
@@ -293,6 +343,9 @@ func (p *Parser) parse() Node {
 	case IDENT:
 		parsedString := p.parseString()
 		return parsedString
+	case BOOLEAN:
+		parsedBoolean := p.parseBoolean()
+		return parsedBoolean
 	case NUMBER:
 		parsedNumber := p.parseNumber()
 		return parsedNumber
