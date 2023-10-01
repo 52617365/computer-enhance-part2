@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+  "github.com/kr/pretty"
 	"os"
 )
 
@@ -55,9 +56,11 @@ func main() {
 
 	tokens := lexer.GetTokensFromLexer()
 
-	parser := GetParser(tokens)
+	fmt.Printf("%# v", pretty.Formatter(tokens))
 
-	ast := parser.parse()
+	// parser := GetParser(tokens)
 
-	printContents(ast)
+	// ast := parser.parse()
+
+	// printContents(ast)
 }

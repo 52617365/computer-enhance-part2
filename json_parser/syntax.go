@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-// NOTE: We probably don't need to build an AST to parse JSON but I'll do it anyway just in case and to learn.
-// TODO: Why are we never getting the object node in our main calling code? Makes zero sense.
 
 type ObjectNode struct {
 	nodeType        string
@@ -161,7 +159,7 @@ func (p *Parser) parseString() Node {
 	startColumn := p.tokens[p.pos].pos.column
 	startIndex := p.pos
 
-	for p.tokens[p.pos].tokenType != QUOTATION { // FIXME: p.pos out of range here.
+	for p.tokens[p.pos].tokenType != QUOTATION {
 		parsedString = parsedString + p.tokens[p.pos].tokenContents
 
 		p.IncrementPos()

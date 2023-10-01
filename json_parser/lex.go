@@ -1,6 +1,6 @@
 package main
 
-// NOTE: In theory we should have to implement booleans but for Casey's homework I don't think we need to.
+// TODO: Handle the , character in strings. The meaning of , will change depending on the context.
 import (
 	"bufio"
 	"io"
@@ -186,7 +186,7 @@ func (l *Lexer) lexIdent() string {
 	}
 }
 
-// TODO: how do we handle the ',' character? It can be within a string, but it can also be a delimiter.
+// TODO: We have to implement the , character. It can be within a string but it can also mean something else in a different context.
 func isIdentSymbol(r rune) bool {
 	if r == '.' || r == '-' || r == '_' || r == '$' || r == '+' || r == '!' || r == '(' || r == ')' {
 		return true
