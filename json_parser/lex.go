@@ -126,7 +126,7 @@ func (l *Lexer) Lex() Token {
 				isNumber := true
 
 				for _, r := range lit {
-					if !unicode.IsNumber(r) {
+					if !unicode.IsNumber(r) && r != '.' && r != '-' {
 						isNumber = false
 						break
 					}

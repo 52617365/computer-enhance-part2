@@ -71,39 +71,7 @@ func (p *Parser) IncrementPos() {
 type Node interface{}
 
 func printContents(n Node) {
-	//fmt.Println()
-	if eof, ok := n.(EndOfFile); ok {
-		fmt.Printf("EOF - File end at position %d\n", eof.endPos)
-		return
-	} /*else if contents, ok := n.(ObjectNode); ok {*/
-	//	fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-	//
-	//	for k, v := range contents.Objects {
-	//		fmt.Printf("%s: ", k)
-	//		printContents(v)
-	//	}
-	//
-	//} else if contents, ok := n.(ArrayNode); ok {
-	//	fmt.Printf("%s - start: %d:%d, end: %d:%d, token index range: %d:%d\n", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-	//
-	//	for k, v := range contents.Elements {
-	//		fmt.Printf("Array [%d]: ", k)
-	//		printContents(v)
-	//	}
-
 	fmt.Printf("%# v", pretty.Formatter(n))
-	//} else if contents, ok := n.(StringNode); ok {
-	//	fmt.Printf("%s", contents.Value)
-	//	fmt.Printf(" %s- start: %d:%d, end: %d:%d, token index range: %d:%d", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-	//} else if contents, ok := n.(NumberNode); ok {
-	//	fmt.Printf("%.15f", contents.Value)
-	//	fmt.Printf(" %s - start: %d:%d, end: %d:%d, token index range: %d:%d", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-	//} else if contents, ok := n.(BooleanNode); ok {
-	//	fmt.Printf("%s", contents.Value)
-	//	fmt.Printf(" %s - start: %d:%d, end: %d:%d, token index range: %d:%d", contents.nodeType, contents.startPos.column, contents.startPos.line, contents.endPos.column, contents.endPos.line, contents.tokenIndexStart, contents.tokenIndexEnd)
-	//} else {
-	//	fmt.Printf("Unknown node type: %s\n", n)
-	//}
 }
 
 func GetParser(tokens []Token) *Parser {
@@ -120,23 +88,23 @@ func (p *Parser) parseBoolean() Node {
 	startColumn := p.tokens[p.pos].pos.column
 	startIndex := p.pos
 
-	//p.IncrementPos() // Getting rid of the opening " character.
-
-	//for p.tokens[p.pos].tokenType != QUOTATION {
 	parsedBoolean = parsedBoolean + p.tokens[p.pos].tokenContents
 
 	p.IncrementPos()
-	//}
 
-	//if p.tokens[p.pos].tokenType != QUOTATION {
-	//	panic("Error while parsing boolean")
-	//}
+	if p.tokens[p.pos].tokenType != QUOTATION {
+		panic("Error while parsing boolean")
+	}
 
 	p.IncrementPos() // Getting rid of the opening " character.
 
 	endLine := p.tokens[p.pos].pos.line
 	endColumn := p.tokens[p.pos].pos.column
 	endIndex := p.pos
+
+	if p.tokens[p.pos].tokenType == COMMA {
+		p.IncrementPos()
+	}
 
 	return BooleanNode{
 		nodeType:        "boolean",
@@ -174,6 +142,10 @@ func (p *Parser) parseString() Node {
 
 	p.IncrementPos() // Getting rid of the closing " character.
 
+	if p.tokens[p.pos].tokenType == COMMA {
+		p.IncrementPos() // Getting rid of the , character after the " character.
+	}
+
 	return StringNode{
 		nodeType:        "string",
 		Value:           parsedString,
@@ -198,8 +170,8 @@ func (p *Parser) parseArray() Node {
 	startColumn := p.tokens[p.pos].pos.column
 	startIndex := p.pos
 
+	// TODO: why does this parse never return back to the caller?
 	for p.tokens[p.pos].tokenType != SQUARECLOSE {
-
 		node := p.parse()
 
 		// return early if we hit end of file with parse
@@ -209,10 +181,9 @@ func (p *Parser) parseArray() Node {
 
 		elements = append(elements, node)
 
-		if p.tokens[p.pos].tokenType == COMMA {
+		if p.tokens[p.pos].tokenType == COMMA || p.tokens[p.pos].tokenType == QUOTATION {
 			p.IncrementPos()
 		}
-
 	}
 
 	if p.tokens[p.pos].tokenType != SQUARECLOSE {
@@ -223,7 +194,13 @@ func (p *Parser) parseArray() Node {
 	endColumn := p.tokens[p.pos].pos.column
 	endIndex := p.pos
 
-	p.IncrementPos() // Getting rid of the ] character.
+	// TODO: this never gets hit for some weird ass reason. Results in the program crashing.
+	//  I think problem originates from the fact that we currently assume that stuff always has a trailing comma.
+	//  This is obviously not the case though.
+	if p.tokens[p.pos].tokenType == SQUARECLOSE {
+		p.IncrementPos() // Getting rid of the ] character.
+	}
+
 	return ArrayNode{
 		nodeType:        "array",
 		Elements:        elements,
@@ -241,14 +218,18 @@ func (p *Parser) parseNumber() NumberNode {
 	startColumn := p.tokens[p.pos].pos.column
 	startIndex := p.pos
 
-	for p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
-		parsedNumber = p.tokens[p.pos].tokenContents
+	//for p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
+	parsedNumber = p.tokens[p.pos].tokenContents
 
+	p.IncrementPos()
+	//}
+
+	//if p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
+	//	panic("Expected the end of a number (, or } or ]) here.")
+	//}
+
+	if p.tokens[p.pos].tokenType == COMMA || p.tokens[p.pos].tokenType == CURLYCLOSE || p.tokens[p.pos].tokenType == SQUARECLOSE || p.tokens[p.pos].tokenType == QUOTATION {
 		p.IncrementPos()
-	}
-
-	if p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
-		panic("Expected the end of a number (, or } or ]) here.")
 	}
 
 	endLine := p.tokens[p.pos].pos.line
@@ -268,6 +249,9 @@ func (p *Parser) parseNumber() NumberNode {
 
 }
 
+// TODO: array key values don't work correctly inside objects. Not sure at what point I broke this functionality.
+//
+//	I think it was when I added the comma fix.
 func (p *Parser) parseObject() Node {
 	if p.tokens[p.pos].tokenType != CURLYOPEN {
 		panic("Expected the current token type to be CURLYOPEN")
@@ -281,6 +265,7 @@ func (p *Parser) parseObject() Node {
 	startColumn := p.tokens[p.pos].pos.column
 	startIndex := p.pos
 
+	// This for loop never exits.
 	for p.tokens[p.pos].tokenType != CURLYCLOSE {
 
 		key := p.parse()
@@ -301,9 +286,6 @@ func (p *Parser) parseObject() Node {
 
 		pairs[keyCast.Value] = value
 
-		if p.tokens[p.pos].tokenType == COMMA {
-			p.IncrementPos()
-		}
 	}
 
 	endLine := p.tokens[p.pos].pos.line
@@ -312,9 +294,9 @@ func (p *Parser) parseObject() Node {
 
 	if p.tokens[p.pos].tokenType != CURLYCLOSE {
 		panic("Expected the current token type to be CURLYCLOSE")
+	} else {
+		p.IncrementPos() // Getting rid of the } character.
 	}
-
-	p.IncrementPos() // Getting rid of the } character.
 
 	return ObjectNode{
 		nodeType:        "object",
@@ -351,6 +333,10 @@ func (p *Parser) parse() Node {
 	case COLON:
 		p.IncrementPos() // Skipping the colon because we don't actually care about it.
 		return p.parse()
+	case COMMA:
+		p.IncrementPos() // Skipping the colon because we don't actually care about it.
+		return p.parse()
+
 	default:
 		panic("Why did we get here?")
 	}
