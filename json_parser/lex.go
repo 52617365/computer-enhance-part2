@@ -1,6 +1,5 @@
 package main
 
-// TODO: Handle the , character in strings. The meaning of , will change depending on the context.
 import (
 	"bufio"
 	"io"
@@ -117,7 +116,7 @@ func (l *Lexer) Lex() Token {
 		default:
 			if unicode.IsSpace(r) {
 				continue // nothing to do here, just move on
-			} else if unicode.IsDigit(r) || unicode.IsLetter(r) || isIdentSymbol(r) {
+			} else if unicode.IsDigit(r) || unicode.IsLetter(r) || l.isIdentSymbol(r) {
 
 				// backup and let lexIdent rescan the beginning of the ident
 				startPos := l.pos
@@ -127,8 +126,9 @@ func (l *Lexer) Lex() Token {
 				isNumber := true
 
 				for _, r := range lit {
-					if !unicode.IsNumber(r) && r != '-' && r != '.' {
+					if !unicode.IsNumber(r) {
 						isNumber = false
+						break
 					}
 				}
 
@@ -172,12 +172,34 @@ func (l *Lexer) lexIdent() string {
 			if err == io.EOF {
 				// at the end of the identifier
 				return lit
+			} else {
+				panic("Why did we get here?")
 			}
 		}
 
 		l.pos.column++
-		if unicode.IsLetter(r) || unicode.IsNumber(r) || isIdentSymbol(r) || unicode.IsSpace(r) {
+
+		if unicode.IsLetter(r) || unicode.IsNumber(r) || l.isIdentSymbol(r) || unicode.IsSpace(r) {
 			lit = lit + string(r)
+		} else if r == ',' {
+			nextChar, err := l.reader.Peek(1)
+			//l.backup()
+			if err != nil {
+				if err == io.EOF {
+					// at the end of the identifier
+					return lit
+				} else {
+					panic("Why did we get here?")
+				}
+			}
+
+			if nextChar[0] == ' ' || unicode.IsLetter(rune(nextChar[0])) || unicode.IsNumber(rune(nextChar[0])) {
+				lit = lit + string(r)
+			} else {
+				// scanned something not in the identifier
+				//l.backup()
+				return lit
+			}
 		} else {
 			// scanned something not in the identifier
 			l.backup()
@@ -186,8 +208,7 @@ func (l *Lexer) lexIdent() string {
 	}
 }
 
-// TODO: We have to implement the , character. It can be within a string but it can also mean something else in a different context.
-func isIdentSymbol(r rune) bool {
+func (l *Lexer) isIdentSymbol(r rune) bool {
 	if r == '.' || r == '-' || r == '_' || r == '$' || r == '+' || r == '!' || r == '(' || r == ')' {
 		return true
 	} else {

@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-
 type ObjectNode struct {
 	nodeType        string
 	Objects         map[string]Node
