@@ -120,7 +120,9 @@ func (p *Parser) parseBoolean() Node {
 func (p *Parser) parseString() Node {
 	var parsedString string
 
-	p.IncrementPos() // Getting rid of the opening " character.
+	if p.tokens[p.pos].tokenType == QUOTATION {
+		p.IncrementPos() // Getting rid of the opening " character.
+	}
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
@@ -259,7 +261,9 @@ func (p *Parser) parseObject() Node {
 
 	pairs := make(map[string]Node)
 
-	p.IncrementPos() // Getting rid of the { character.
+	if p.tokens[p.pos].tokenType == CURLYOPEN {
+		p.IncrementPos() // Getting rid of the { character.
+	}
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
