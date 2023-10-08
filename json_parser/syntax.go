@@ -172,7 +172,6 @@ func (p *Parser) parseArray() Node {
 	startColumn := p.tokens[p.pos].pos.column
 	startIndex := p.pos
 
-	// TODO: why does this parse never return back to the caller?
 	for p.tokens[p.pos].tokenType != SQUARECLOSE {
 		node := p.parse()
 
@@ -196,9 +195,6 @@ func (p *Parser) parseArray() Node {
 	endColumn := p.tokens[p.pos].pos.column
 	endIndex := p.pos
 
-	// TODO: this never gets hit for some weird ass reason. Results in the program crashing.
-	//  I think problem originates from the fact that we currently assume that stuff always has a trailing comma.
-	//  This is obviously not the case though.
 	if p.tokens[p.pos].tokenType == SQUARECLOSE {
 		p.IncrementPos() // Getting rid of the ] character.
 	}
@@ -251,9 +247,6 @@ func (p *Parser) parseNumber() NumberNode {
 
 }
 
-// TODO: array key values don't work correctly inside objects. Not sure at what point I broke this functionality.
-//
-//	I think it was when I added the comma fix.
 func (p *Parser) parseObject() Node {
 	if p.tokens[p.pos].tokenType != CURLYOPEN {
 		panic("Expected the current token type to be CURLYOPEN")
@@ -338,7 +331,7 @@ func (p *Parser) parse() Node {
 		p.IncrementPos() // Skipping the colon because we don't actually care about it.
 		return p.parse()
 	case COMMA:
-		p.IncrementPos() // Skipping the colon because we don't actually care about it.
+		p.IncrementPos() // Skipping the comma because we don't actually care about it in this context.
 		return p.parse()
 
 	default:
