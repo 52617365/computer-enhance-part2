@@ -218,15 +218,9 @@ func (p *Parser) parseNumber() NumberNode {
 	startColumn := p.tokens[p.pos].pos.column
 	startIndex := p.pos
 
-	//for p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
 	parsedNumber = p.tokens[p.pos].tokenContents
 
 	p.IncrementPos()
-	//}
-
-	//if p.tokens[p.pos].tokenType != COMMA && p.tokens[p.pos].tokenType != CURLYCLOSE && p.tokens[p.pos].tokenType != SQUARECLOSE {
-	//	panic("Expected the end of a number (, or } or ]) here.")
-	//}
 
 	if p.tokens[p.pos].tokenType == COMMA || p.tokens[p.pos].tokenType == QUOTATION {
 		p.IncrementPos()

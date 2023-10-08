@@ -56,8 +56,6 @@ func main() {
 
 	tokens := lexer.GetTokensFromLexer()
 
-	// fmt.Printf("%# v", pretty.Formatter(tokens))
-
 	parser := GetParser(tokens)
 
 	ast := parser.parse()

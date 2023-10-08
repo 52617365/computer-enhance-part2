@@ -62,7 +62,7 @@ func (l *Lexer) Lex() Token {
 				}
 			}
 
-			// at this point there  isn't much we can do, and the compiler
+			// at this point there isn't much we can do, and the lexer
 			// should just return the raw error to the user
 			panic(err)
 		}
@@ -183,7 +183,6 @@ func (l *Lexer) lexIdent() string {
 			lit = lit + string(r)
 		} else if r == ',' {
 			nextChar, err := l.reader.Peek(1)
-			//l.backup()
 			if err != nil {
 				if err == io.EOF {
 					// at the end of the identifier
@@ -197,11 +196,9 @@ func (l *Lexer) lexIdent() string {
 				lit = lit + string(r)
 			} else {
 				// scanned something not in the identifier
-				//l.backup()
 				return lit
 			}
 		} else {
-			// scanned something not in the identifier
 			l.backup()
 			return lit
 		}
