@@ -173,6 +173,10 @@ func (p *Parser) parseArray() Node {
 	startIndex := p.pos
 
 	for p.tokens[p.pos].tokenType != SQUARECLOSE {
+
+		if p.tokens[p.pos].tokenType == COMMA {
+			p.IncrementPos() // Skipping the comma because we don't actually care about it in this context.
+		}
 		node := p.parse()
 
 		// return early if we hit end of file with parse
@@ -195,9 +199,7 @@ func (p *Parser) parseArray() Node {
 	endColumn := p.tokens[p.pos].pos.column
 	endIndex := p.pos
 
-	if p.tokens[p.pos].tokenType == SQUARECLOSE {
-		p.IncrementPos() // Getting rid of the ] character.
-	}
+	p.IncrementPos() // Getting rid of the ] character.
 
 	return ArrayNode{
 		nodeType:        "array",
@@ -226,7 +228,7 @@ func (p *Parser) parseNumber() NumberNode {
 	//	panic("Expected the end of a number (, or } or ]) here.")
 	//}
 
-	if p.tokens[p.pos].tokenType == COMMA || p.tokens[p.pos].tokenType == CURLYCLOSE || p.tokens[p.pos].tokenType == SQUARECLOSE || p.tokens[p.pos].tokenType == QUOTATION {
+	if p.tokens[p.pos].tokenType == COMMA || p.tokens[p.pos].tokenType == QUOTATION {
 		p.IncrementPos()
 	}
 
@@ -254,17 +256,17 @@ func (p *Parser) parseObject() Node {
 
 	pairs := make(map[string]Node)
 
-	if p.tokens[p.pos].tokenType == CURLYOPEN {
-		p.IncrementPos() // Getting rid of the { character.
-	}
+	p.IncrementPos() // Getting rid of the { character.
 
 	startLine := p.tokens[p.pos].pos.line
 	startColumn := p.tokens[p.pos].pos.column
 	startIndex := p.pos
 
-	// This for loop never exits.
 	for p.tokens[p.pos].tokenType != CURLYCLOSE {
 
+		if p.tokens[p.pos].tokenType == COMMA {
+			p.IncrementPos() // Skipping the comma because we don't actually care about it in this context.
+		}
 		key := p.parse()
 		value := p.parse()
 
@@ -290,10 +292,10 @@ func (p *Parser) parseObject() Node {
 	endIndex := p.pos
 
 	if p.tokens[p.pos].tokenType != CURLYCLOSE {
-		panic("Expected the current token type to be CURLYCLOSE")
-	} else {
-		p.IncrementPos() // Getting rid of the } character.
+		panic(fmt.Sprintf("Expected the current token type to be CURLYCLOSE but it was %s", p.tokens[p.pos].tokenType))
 	}
+
+	p.IncrementPos() // Getting rid of the } character.
 
 	return ObjectNode{
 		nodeType:        "object",
@@ -329,9 +331,6 @@ func (p *Parser) parse() Node {
 		return parsedNumber
 	case COLON:
 		p.IncrementPos() // Skipping the colon because we don't actually care about it.
-		return p.parse()
-	case COMMA:
-		p.IncrementPos() // Skipping the comma because we don't actually care about it in this context.
 		return p.parse()
 
 	default:
